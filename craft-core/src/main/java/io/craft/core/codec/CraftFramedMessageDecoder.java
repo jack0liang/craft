@@ -6,12 +6,16 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.apache.thrift.transport.TTransportException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 import static io.craft.core.constant.Constants.DEFAULT_MAX_FRAME_LENGTH;
 
 public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
+
+    private static final Logger logger = LoggerFactory.getLogger(CraftFramedMessageDecoder.class);
 
     private int maxFrameLength;
 
@@ -50,7 +54,7 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
-        System.out.println("received bytes: " + in.readableBytes());
+        logger.debug("received bytes = {}", in.readableBytes());
 
         readBuffer.writeBytes(in);
 
@@ -82,7 +86,7 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
             if (readBuffer.readableBytes() >= frameLength) {
                 //当前帧数据读取完成
                 try {
-                    System.out.println(System.currentTimeMillis() + " get request");
+                    logger.debug("recv request complete");
                     ByteBuf buffer = ctx.alloc().directBuffer(frameLength);
                     readBuffer.readBytes(buffer);
                     out.add(new CraftFramedMessage(buffer, requestTime));

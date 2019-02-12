@@ -2,22 +2,24 @@ package io.craft;
 
 import io.craft.abc.UserService;
 import io.craft.abc.model.UserModel;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     @Override
     public UserModel get(Long id) throws TException {
-        System.out.println("get id=" + id);
+        logger.debug("get id = {}", id);
         return null;
     }
 
     @Override
     public UserModel gets(List<Long> ids) throws TException {
-        System.out.println("gets ids size=" + ids.size());
+        logger.debug("gets ids size = {}", ids.size());
         try {
             TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException e) {
@@ -28,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void ping() throws TException {
-        System.out.println("ping");
+        logger.debug("ping");
     }
 
 }

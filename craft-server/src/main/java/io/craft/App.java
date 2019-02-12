@@ -1,17 +1,18 @@
 package io.craft;
 
 import io.craft.abc.UserService;
+import io.craft.core.codec.CraftThrowableEncoder;
+import io.craft.core.message.CraftFramedMessage;
 import io.craft.server.handler.CraftMessageHandler;
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.MessageToMessageDecoder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Hello world!
  */
+@Slf4j
 public class App {
 
     private static App app;
@@ -98,7 +100,11 @@ public class App {
             ids.add(Long.valueOf(i));
         }
 
-        client.gets(ids);
+        try {
+            client.gets(ids);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
 
         socket.close();
     }
@@ -133,6 +139,8 @@ public class App {
 
         CraftMessageHandler craftMessageHandler = new CraftMessageHandler(processor);
 
+        CraftThrowableEncoder exceptionEncoder = new CraftThrowableEncoder();
+
         try {
             ServerBootstrap b = new ServerBootstrap();        //1
 
@@ -144,10 +152,19 @@ public class App {
 
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
+                            logger.debug("channel id = {}", ch.id());
                             ch.pipeline()
                                     .addLast(new CraftFramedMessageDecoder())
+                                    .addLast(new MessageToMessageDecoder<CraftFramedMessage>() {
+                                        @Override
+                                        protected void decode(ChannelHandlerContext ctx, CraftFramedMessage msg, List<Object> out) throws Exception {
+                                            out.add(msg);
+                                        }
+                                    })
                                     .addLast(craftFramedMessageEncoder)
-                                    .addLast(craftMessageHandler);
+                                    .addLast(exceptionEncoder)
+                                    .addLast(craftMessageHandler)
+                                    ;
                         }
                     });
             ChannelFuture f = b.bind().sync();  //6

@@ -3,16 +3,16 @@ package io.craft.server.executor;
 import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
 import io.craft.core.transport.TByteBuf;
-import io.craft.core.util.CraftExceptionHandler;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TApplicationException;
-import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
 
+@Slf4j
 public class CraftBusinessTask implements Runnable {
 
     private ChannelHandlerContext context;
@@ -34,9 +34,9 @@ public class CraftBusinessTask implements Runnable {
 
         if (latency > 500) {
             //大于500ms的请求，直接丢弃
-            System.out.println("discard request latency=" + latency + ", " + message);
+            logger.debug("discard request latency = {}, message = {}", latency, message);
             if (!context.isRemoved()) {
-                CraftExceptionHandler.handle(context, new TApplicationException(TApplicationException.INTERNAL_ERROR, "request discarded"));
+                context.writeAndFlush(new TApplicationException(TApplicationException.INTERNAL_ERROR, "request discarded"));
             }
             message.getBuffer().release();
             return;
@@ -55,16 +55,16 @@ public class CraftBusinessTask implements Runnable {
 
             processor.process(pin, pout);
 
-            context.writeAndFlush(returnMessage).sync();
+            try {
+                context.writeAndFlush(returnMessage);
+            } catch (Exception e) {
+                logger.error("channel write error {}", e.getMessage(), e);
+            }
         } catch (Exception e) {
-            CraftExceptionHandler.handle(context, e);
+            context.writeAndFlush(e);
+            logger.error("process error {}", e.getMessage(), e);
         } finally {
-            if (writeBuffer.refCnt() > 0) {
-                writeBuffer.release();
-            }
-            if (message.getBuffer().refCnt() > 0) {
-                message.getBuffer().release();
-            }
+            message.getBuffer().release();
         }
     }
 }
