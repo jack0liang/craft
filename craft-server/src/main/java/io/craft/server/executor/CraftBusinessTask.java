@@ -34,17 +34,21 @@ public class CraftBusinessTask implements Runnable {
 
         if (latency > 500) {
             //大于500ms的请求，直接丢弃
-            logger.debug("discard request latency = {}, message = {}", latency, message);
-            if (!context.isRemoved()) {
-                context.writeAndFlush(new TApplicationException(TApplicationException.INTERNAL_ERROR, "request discarded"));
+            try {
+                logger.debug("discard request latency = {}, message = {}", latency, message);
+                if (!context.isRemoved()) {
+                    context.writeAndFlush(new TApplicationException(TApplicationException.INTERNAL_ERROR, "request discarded"));
+                }
+            } finally {
+                message.release();
             }
-            message.getBuffer().release();
             return;
         }
 
         ByteBuf writeBuffer = context.alloc().directBuffer(Constants.DEFAULT_BYTEBUF_SIZE);
 
         try {
+            logger.debug("message {}, refCnt = {} process", message, message.refCnt());
             TTransport tin = new TByteBuf(message.getBuffer());
             TProtocol pin = new TBinaryProtocol(tin);
 
@@ -53,18 +57,24 @@ public class CraftBusinessTask implements Runnable {
 
             CraftFramedMessage returnMessage = new CraftFramedMessage(writeBuffer, null);
 
+            logger.debug("message {} process", message);
             processor.process(pin, pout);
 
             try {
                 context.writeAndFlush(returnMessage);
             } catch (Exception e) {
+                //发生异常时，关闭异常的连接
+                context.close();
                 logger.error("channel write error {}", e.getMessage(), e);
             }
+
         } catch (Exception e) {
+            writeBuffer.release();
             context.writeAndFlush(e);
             logger.error("process error {}", e.getMessage(), e);
         } finally {
-            message.getBuffer().release();
+            logger.debug("message {} release", message);
+            message.release();
         }
     }
 }

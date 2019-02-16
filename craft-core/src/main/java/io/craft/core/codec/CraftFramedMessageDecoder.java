@@ -91,7 +91,6 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
                     readBuffer.readBytes(buffer);
                     out.add(new CraftFramedMessage(buffer, requestTime));
                     //一个请求读取完成后，就丢弃已读的内容
-                    readBuffer.discardReadBytes();
                 } finally {
                     isNewFrame = true;
                     frameLength = 0;

@@ -32,6 +32,7 @@
         <commons-collections4.version>4.2</commons-collections4.version>
         <logback.version>1.2.3</logback.version>
         <freemarker.version>2.3.28</freemarker.version>
+        <jetcd.version>0.3.0</jetcd.version>
     </properties>
 
     <dependencyManagement>
@@ -118,6 +119,11 @@
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
                 <version>${freemarker.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.etcd</groupId>
+                <artifactId>jetcd-core</artifactId>
+                <version>${jetcd.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

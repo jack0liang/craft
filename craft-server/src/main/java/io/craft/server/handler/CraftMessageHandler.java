@@ -14,12 +14,13 @@ import java.util.concurrent.ExecutorService;
 @ChannelHandler.Sharable
 public class CraftMessageHandler extends ChannelInboundHandlerAdapter {
 
-    private final static ExecutorService executorService = new CraftBusinessExecutor(2,20000, new CraftRejectedExecutionHandler());
+    private ExecutorService executor;
 
     private TProcessor processor;
 
-    public CraftMessageHandler(TProcessor processor) {
+    public CraftMessageHandler(TProcessor processor, ExecutorService executor) {
         this.processor = processor;
+        this.executor = executor;
     }
 
     @Override
@@ -31,7 +32,7 @@ public class CraftMessageHandler extends ChannelInboundHandlerAdapter {
 
         CraftFramedMessage message = (CraftFramedMessage) msg;
 
-        executorService.submit(new CraftBusinessTask(ctx, processor, message));
+        executor.submit(new CraftBusinessTask(ctx, processor, message));
     }
 
     @Override
