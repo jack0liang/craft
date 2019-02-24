@@ -4,6 +4,7 @@ import io.craft.abc.UserService;
 import io.craft.abc.model.UserModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

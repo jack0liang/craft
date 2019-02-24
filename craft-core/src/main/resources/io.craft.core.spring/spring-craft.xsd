@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://io.craft.core/spring/craft"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:beans="http://www.springframework.org/schema/beans"
+            xmlns:tool="http://www.springframework.org/schema/tool"
+            xmlns:context="http://www.springframework.org/schema/context"
+            targetNamespace="http://io.craft.core/spring/craft"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+    <xsd:import namespace="http://www.springframework.org/schema/beans"/>
+    <xsd:import namespace="http://www.springframework.org/schema/context"/>
+    <xsd:import namespace="http://www.springframework.org/schema/tool"/>
+
+    <xsd:element name="service">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="beans:identifiedType">
+                    <xsd:group ref="beans:beanElements"/>
+                    <xsd:attributeGroup ref="beans:beanAttributes"/>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="property-placeholder">
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="context:propertyLoading">
+                    <xsd:attribute name="system-properties-mode" default="OVERRIDE">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[
+	"NEVER" indicates placeholders should be resolved only against local properties and never against system properties;
+	"FALLBACK" indicates placeholders should be resolved against any local properties and then against system properties;
+	"OVERRIDE" indicates placeholders should be resolved first against system properties and then against any local properties;
+							]]></xsd:documentation>
+                        </xsd:annotation>
+                        <xsd:simpleType>
+                            <xsd:restriction base="xsd:string">
+                                <xsd:enumeration value="NEVER"/>
+                                <xsd:enumeration value="FALLBACK"/>
+                                <xsd:enumeration value="OVERRIDE"/>
+                            </xsd:restriction>
+                        </xsd:simpleType>
+                    </xsd:attribute>
+                    <xsd:attribute name="value-separator" default=":">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[
+	The separating character between the placeholder variable and the associated
+	default value: by default, a ':' symbol.
+				]]></xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="trim-values">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[
+	Whether to trim resolved values before applying them, removing superfluous
+	whitespace (in particular tab characters) from the beginning and end.
+				]]></xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="null-value">
+                        <xsd:annotation>
+                            <xsd:documentation><![CDATA[
+	A value that should be treated as 'null' when resolved as a placeholder value:
+	e.g. "" (empty String) or "null". By default, no such null value is defined.
+				]]></xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

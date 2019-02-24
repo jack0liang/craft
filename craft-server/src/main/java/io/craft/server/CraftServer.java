@@ -3,12 +3,12 @@ package io.craft.server;
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.craft.core.codec.CraftThrowableEncoder;
+import io.craft.core.spring.PropertyManager;
 import io.craft.server.executor.CraftBusinessExecutor;
 import io.craft.server.executor.CraftRejectedExecutionHandler;
 import io.craft.server.executor.CraftThreadFactory;
 import io.craft.server.handler.CraftMessageHandler;
-import io.craft.server.register.EtcdServiceRegister;
-import io.craft.server.register.ServiceRegister;
+import io.craft.core.registry.ServiceRegistry;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -39,15 +39,22 @@ public class CraftServer implements Closeable {
 
     private EventLoopGroup workerGroup;
 
-    private ExecutorService businessThreadPool;
+    private ExecutorService businessExecutor;
 
-    private ServiceRegister serviceRegister;
+    private ServiceRegistry registry;
 
-    private void serve(Properties properties) throws Throwable {
+    private PropertyManager propertyManager;
 
-        Integer port = Integer.valueOf(properties.getProperty("port"));//服务端口
+    private void serve() throws Throwable {
 
         applicationContext = new ClassPathXmlApplicationContext("service.xml");
+
+        propertyManager = applicationContext.getBean(PropertyManager.class);
+
+        String host = propertyManager.getProperty("application.host");
+
+        int port = Integer.valueOf(propertyManager.getProperty("application.port"));
+
         TProcessor processor = applicationContext.getBean(TProcessor.class);
 
         CraftFramedMessageEncoder craftFramedMessageEncoder = new CraftFramedMessageEncoder();
@@ -56,19 +63,19 @@ public class CraftServer implements Closeable {
 
         ServerBootstrap bootstrap = new ServerBootstrap();
 
-        businessThreadPool = new CraftBusinessExecutor(100, 20000, new CraftRejectedExecutionHandler());
+        businessExecutor = new CraftBusinessExecutor(100, 20000, new CraftRejectedExecutionHandler());
 
         bossGroup = new NioEventLoopGroup(10, new CraftThreadFactory("craft-boss-"));
 
         workerGroup = new NioEventLoopGroup(10, new CraftThreadFactory("craft-worker-"));
 
-        CraftMessageHandler craftMessageHandler = new CraftMessageHandler(processor, businessThreadPool);
+        CraftMessageHandler craftMessageHandler = new CraftMessageHandler(processor, businessExecutor);
 
         try {
 
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .localAddress(new InetSocketAddress(port))
+                    .localAddress(new InetSocketAddress(host, port))
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
 
@@ -87,11 +94,15 @@ public class CraftServer implements Closeable {
             //端口监听成功
             logger.debug("listen port success");
 
-            serviceRegister = new EtcdServiceRegister("root", properties);
-            serviceRegister.register();
+            registry = applicationContext.getBean(ServiceRegistry.class);
+            registry.register();
+            logger.debug("service register success");
 
-            Signal.handle(new Signal("TERM"), new CraftSignalHandler(this));
-            Signal.handle(new Signal("INT"), new CraftSignalHandler(this));
+            CraftTermHandler termHandler = new CraftTermHandler(this);
+
+            Signal.handle(new Signal("TERM"), termHandler);
+            Signal.handle(new Signal("INT"), termHandler);
+            logger.debug("signal handler succsss");
 
             channel = f.channel();
 
@@ -104,10 +115,14 @@ public class CraftServer implements Closeable {
     @Override
     public synchronized void close() throws IOException {
         //先反注册服务
-        if (serviceRegister != null) {
-            serviceRegister.close();
-            serviceRegister = null;
-            logger.debug("unregister service successful");
+        try {
+            if (registry != null) {
+                registry.close();
+                registry = null;
+                logger.debug("unregister service successful");
+            }
+        } catch (Exception e) {
+            throw new IOException(e.getMessage(), e);
         }
         //等待1s, 避免有些还没感知到服务下线
         try {
@@ -147,9 +162,9 @@ public class CraftServer implements Closeable {
         }
         //关闭business thread pool
         try {
-            if (businessThreadPool != null) {
-                businessThreadPool.shutdown();
-                businessThreadPool = null;
+            if (businessExecutor != null) {
+                businessExecutor.shutdown();
+                businessExecutor = null;
                 logger.debug("business thread pool close successful");
             }
         } catch (Exception e) {
@@ -164,21 +179,7 @@ public class CraftServer implements Closeable {
     }
 
     public static void main(String... args) throws Throwable {
-        Properties properties = new Properties(System.getProperties());
-        for(String arg : args) {
-            if (StringUtils.isBlank(arg)) {
-                continue;
-            }
-            arg = StringUtils.trim(arg);
-            int idx = arg.indexOf("=");
-            if (idx == -1) {
-                properties.setProperty(arg, null);
-            } else {
-                properties.setProperty(arg.substring(0, idx), arg.substring(idx+1));
-            }
-        }
-
         CraftServer server = new CraftServer();
-        server.serve(properties);
+        server.serve();
     }
 }

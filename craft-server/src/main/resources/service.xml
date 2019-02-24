@@ -2,21 +2,23 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
-    http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+       xmlns:craft="http://io.craft.core/spring/craft"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://io.craft.core/spring/craft http://io.craft.core/spring/craft/spring-craft.xsd
+       "
        default-lazy-init="false">
 
-    <context:property-placeholder
+    <craft:property-placeholder
             file-encoding="utf-8"
             ignore-resource-not-found="true"
-            location="application.properties" />
+            location="application.properties,etcd://127.0.0.1:2379" />
 
-    <bean class="io.craft.abc.UserService.Processor" primary="true">
-        <constructor-arg name="iface">
-            <bean class="io.craft.UserServiceImpl" />
-        </constructor-arg>
-    </bean>
+    <craft:service class="io.craft.UserServiceImpl" />
 
-    <!--<import resource="applicationContext.xml" />-->
+    <context:annotation-config />
+
+    <context:component-scan base-package="io.craft.core" />
 
 </beans>
