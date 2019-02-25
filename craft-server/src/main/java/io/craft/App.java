@@ -1,8 +1,6 @@
 package io.craft;
 
 import io.craft.abc.UserService;
-import io.craft.core.config.EtcdClient;
-import io.etcd.jetcd.Client;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -81,6 +79,7 @@ public class App {
         TProtocol pin = new TBinaryProtocol(tin);
 
         TProtocol pout = new TBinaryProtocol(tout);
+
         UserService.Client client = new UserService.Client(pin, pout);
 
         List<Long> ids = new ArrayList<>();

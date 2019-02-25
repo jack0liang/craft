@@ -32,7 +32,7 @@ public class CraftBusinessTask implements Runnable {
 
         long latency = System.currentTimeMillis() - message.getRequestTime();
 
-        if (latency > 500) {
+        if (latency > message.getTimeout()) {
             //大于500ms的请求，直接丢弃
             try {
                 logger.debug("discard request latency = {}, message = {}", latency, message);
@@ -55,7 +55,10 @@ public class CraftBusinessTask implements Runnable {
             TTransport tout = new TByteBuf(writeBuffer);
             TProtocol pout = new TBinaryProtocol(tout);
 
-            CraftFramedMessage returnMessage = new CraftFramedMessage(writeBuffer, null);
+            CraftFramedMessage returnMessage = CraftFramedMessage.newBuilder()
+                    .setTraceId(message.getTraceId())
+                    .setBuffer(writeBuffer)
+                    .build();
 
             logger.debug("message {} process", message);
             processor.process(pin, pout);

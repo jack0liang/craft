@@ -2,9 +2,13 @@ package io.craft.core.codec;
 
 import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
+import io.craft.core.transport.TByteBuf;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TMap;
+import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,16 +29,28 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
 
     private int frameLength;
 
-    private Long requestTime;
+    private long requestTime;
+
 
     public CraftFramedMessageDecoder(int maxFrameLength) {
         this.maxFrameLength = maxFrameLength;
-        this.isNewFrame = true;
-        this.frameLength = 0;
+        clearMessage();
     }
 
     public CraftFramedMessageDecoder() {
         this(DEFAULT_MAX_FRAME_LENGTH);
+    }
+
+    private void clearMessage() {
+        this.isNewFrame = true;
+        this.frameLength = 0;
+        this.requestTime = 0;
+    }
+
+    private void newMessage(int frameLength) {
+        this.isNewFrame = false;
+        this.frameLength = frameLength;
+        this.requestTime = System.currentTimeMillis();
     }
 
     @Override
@@ -61,13 +77,12 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
         while (true) {
             if (isNewFrame) {
                 //收到第一个数据包, 记录请求开始时间
-                requestTime = System.currentTimeMillis();
                 if (readBuffer.readableBytes() < 4) {
                     //如果当前的缓冲区可读取字节小于int占用长度，此次无法读取帧大小，直接放弃
                     break;
                 }
                 //读取帧大小
-                frameLength = readBuffer.readInt();
+                int frameLength = readBuffer.readInt();
 
                 if (frameLength < 0) {
                     throw new TTransportException(TTransportException.CORRUPTED_DATA, "Read a negative frame size (" + frameLength + ")!");
@@ -80,20 +95,38 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
                             "Frame size (" + frameLength + ") larger than max length (" + maxFrameLength + ")!");
                 }
 
-                isNewFrame = false;
+                newMessage(frameLength);
             }
 
             if (readBuffer.readableBytes() >= frameLength) {
                 //当前帧数据读取完成
                 try {
-                    logger.debug("recv request complete");
                     ByteBuf buffer = ctx.alloc().directBuffer(frameLength);
                     readBuffer.readBytes(buffer);
-                    out.add(new CraftFramedMessage(buffer, requestTime));
-                    //一个请求读取完成后，就丢弃已读的内容
+
+                    CraftFramedMessage.Builder builder = CraftFramedMessage.newBuilder();
+                    TProtocol protocol = new TBinaryProtocol(new TByteBuf(buffer));
+                    //解析messageId
+                    String traceId = protocol.readString();
+                    builder.setTraceId(traceId);
+                    //设置请求时间
+                    builder.setRequestTime(requestTime);
+                    //解析timeout，调试设置为500ms
+                    builder.setTimeout(500);
+                    //解析header
+                    TMap map = protocol.readMapBegin();
+                    for(int i = 0; i<map.size; ++i) {
+                        builder.addHeader(protocol.readString(), protocol.readString());
+                    }
+                    protocol.readMapEnd();
+                    builder.setBuffer(buffer);
+                    out.add(builder.build());
+                    //每次请求消息读取完后就丢弃已读byte
+                    readBuffer.discardReadBytes();
+
+                    logger.debug("recv request complete, traceId={}", traceId);
                 } finally {
-                    isNewFrame = true;
-                    frameLength = 0;
+                    clearMessage();
                 }
             } else {
                 //如果需要读取的数据没有帧大小，直接放弃

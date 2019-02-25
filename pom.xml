@@ -13,6 +13,8 @@
         <module>craft-core</module>
         <module>craft-server</module>
         <module>craft-maven-plugin</module>
+        <module>craft-proxy</module>
+        <module>craft-proxy</module>
     </modules>
 
     <name>craft</name>
