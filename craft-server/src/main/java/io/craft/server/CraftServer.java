@@ -6,6 +6,7 @@ import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.constant.Constants;
 import io.craft.core.registry.ServiceRegistry;
 import io.craft.core.spring.PropertyManager;
+import io.craft.core.util.IPUtil;
 import io.craft.server.executor.CraftBusinessExecutor;
 import io.craft.server.executor.CraftRejectedExecutionHandler;
 import io.craft.server.executor.CraftThreadFactory;
@@ -23,7 +24,9 @@ import sun.misc.Signal;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +53,13 @@ public class CraftServer implements Closeable {
 
         propertyManager = applicationContext.getBean(PropertyManager.class);
 
-        String host = propertyManager.getProperty(Constants.APPLICATION_HOST);
+        String ip;
+
+        try {
+            ip = IPUtil.getLocalIPV4();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException("get ip failed, error=" + e.getMessage(), e);
+        }
 
         int port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
 
@@ -74,7 +83,7 @@ public class CraftServer implements Closeable {
 
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .localAddress(new InetSocketAddress(host, port))
+                    .localAddress(new InetSocketAddress(ip, port))
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
 
@@ -91,9 +100,10 @@ public class CraftServer implements Closeable {
                     });
             ChannelFuture f = bootstrap.bind().sync();
             //端口监听成功
-            logger.debug("server start success on {}:{}", host, port);
+            logger.debug("server start success on {}:{}", ip, port);
 
             registry = applicationContext.getBean(ServiceRegistry.class);
+
             registry.register();
             logger.debug("service register success");
 

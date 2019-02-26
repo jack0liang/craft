@@ -12,8 +12,6 @@ public class Constants {
 
     public final static String APPLICATION_NAME = "application.name";
 
-    public final static String APPLICATION_HOST = "application.host";
-
     public final static String APPLICATION_PORT = "application.port";
 
     public final static String PROPERTIES_PATH = "/properties/";
