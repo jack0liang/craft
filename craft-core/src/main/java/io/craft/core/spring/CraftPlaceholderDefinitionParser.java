@@ -54,10 +54,10 @@ public class CraftPlaceholderDefinitionParser extends AbstractSingleBeanDefiniti
         if (CollectionUtils.isNotEmpty(etcdServers)) {
             BeanDefinitionBuilder clientDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(EtcdClient.class);
             clientDefinitionBuilder.addPropertyValue("endpoints", etcdServers);
-            clientDefinitionBuilder.addPropertyValue("keepAlive", false);
+            clientDefinitionBuilder.addPropertyValue("keepAlive", true);
             clientDefinitionBuilder.setInitMethodName("init");
             clientDefinitionBuilder.setDestroyMethodName("close");
-            String beanName = parserContext.getReaderContext().generateBeanName(clientDefinitionBuilder.getBeanDefinition());
+            String beanName = EtcdClient.class.getName();
             parserContext.getRegistry().registerBeanDefinition(beanName, clientDefinitionBuilder.getBeanDefinition());
             builder.addPropertyReference("configClient", beanName);
         }

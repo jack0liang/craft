@@ -14,12 +14,12 @@
     </appender>
     <!-- 输入到文件，按日期轮滚 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${ROOT}/${PROJECT}/app.log</file>
+        <file>${ROOT}/${PROJECT}/proxy.log</file>
         <encoder charset="utf-8">
             <pattern>${pattern}</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${ROOT}/${PROJECT}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${ROOT}/${PROJECT}/proxy.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>${MAXHISTORY}</maxHistory>
         </rollingPolicy>
     </appender>

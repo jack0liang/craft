@@ -1,9 +1,11 @@
 package io.craft.core.config;
 
+import java.io.Closeable;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
-public interface ConfigClient<T extends ConfigClient.NamespaceEvent> {
+public interface ConfigClient<T extends ConfigClient.NamespaceEvent> extends Closeable {
 
     /**
      *
@@ -13,6 +15,8 @@ public interface ConfigClient<T extends ConfigClient.NamespaceEvent> {
      * @throws Exception
      */
     String put(String key, String value) throws Exception;
+
+    String put(String key, String value, boolean keepAlive) throws Exception;
 
     boolean delete(String key) throws Exception;
 

@@ -3,6 +3,7 @@ package io.craft.server;
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.craft.core.codec.CraftThrowableEncoder;
+import io.craft.core.constant.Constants;
 import io.craft.core.registry.ServiceRegistry;
 import io.craft.core.spring.PropertyManager;
 import io.craft.server.executor.CraftBusinessExecutor;
@@ -49,9 +50,9 @@ public class CraftServer implements Closeable {
 
         propertyManager = applicationContext.getBean(PropertyManager.class);
 
-        String host = propertyManager.getProperty("application.host");
+        String host = propertyManager.getProperty(Constants.APPLICATION_HOST);
 
-        int port = Integer.valueOf(propertyManager.getProperty("application.port"));
+        int port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
 
         TProcessor processor = applicationContext.getBean(TProcessor.class);
 
@@ -90,7 +91,7 @@ public class CraftServer implements Closeable {
                     });
             ChannelFuture f = bootstrap.bind().sync();
             //端口监听成功
-            logger.debug("listen port success");
+            logger.debug("server start success on {}:{}", host, port);
 
             registry = applicationContext.getBean(ServiceRegistry.class);
             registry.register();

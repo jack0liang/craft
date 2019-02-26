@@ -1,15 +1,18 @@
 package io.craft.core.registry;
 
+import io.craft.core.config.ConfigClient;
 import io.craft.core.config.EtcdClient;
+import io.craft.core.constant.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.LifecycleProcessor;
 
-public class EtcdServiceRegistry implements ServiceRegistry, LifecycleProcessor {
+public class EtcdServiceRegistry implements ServiceRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(EtcdServiceRegistry.class);
 
-    private String root;
+    private ConfigClient configClient;
+
+    private String applicationNamespace;
 
     private String applicationName;
 
@@ -17,14 +20,14 @@ public class EtcdServiceRegistry implements ServiceRegistry, LifecycleProcessor 
 
     private Integer port;
 
-    private String endpoints;
-
-    private EtcdClient client;
-
     private String path;
 
-    public void setRoot(String root) {
-        this.root = root;
+    public void setConfigClient(ConfigClient configClient) {
+        this.configClient = configClient;
+    }
+
+    public void setApplicationNamespace(String applicationNamespace) {
+        this.applicationNamespace = applicationNamespace;
     }
 
     public void setApplicationName(String applicationName) {
@@ -39,44 +42,13 @@ public class EtcdServiceRegistry implements ServiceRegistry, LifecycleProcessor 
         this.port = port;
     }
 
-    public void setEndpoints(String endpoints) {
-        this.endpoints = endpoints;
-    }
-
-    @Override
-    public void onRefresh() {
-        logger.debug("onRefresh");
-    }
-
-    @Override
-    public void onClose() {
-        logger.debug("onClose");
-    }
-
-    @Override
-    public void start() {
-        logger.debug("start");
-    }
-
-    @Override
-    public void stop() {
-        logger.debug("stop");
-    }
-
-    @Override
-    public boolean isRunning() {
-        logger.debug("isRunning");
-        return false;
+    public void init() {
+        this.path = applicationNamespace + applicationName + Constants.HOSTS_PATH + host + ":" + port;
     }
 
     @Override
     public synchronized void register() throws Exception {
-        path = root + applicationName + "/" + host + ":" + port;
-        client = new EtcdClient();
-        client.setEndpoints(endpoints.split(","));
-        client.setKeepAlive(true);
-        client.init();
-        client.put(path, host + ":" + port);
+        configClient.put(path, host + ":" + port);
         logger.debug("register success, path={}", path);
     }
 
@@ -84,9 +56,9 @@ public class EtcdServiceRegistry implements ServiceRegistry, LifecycleProcessor 
     public synchronized void close() throws Exception {
         try {
             try {
-                client.delete(path);
+                configClient.delete(path);
             } finally {
-                client.close();
+                configClient.close();
             }
             logger.debug("unregister success, path={}", path);
         } catch (Exception e) {

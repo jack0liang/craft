@@ -1,6 +1,7 @@
 package io.craft.core.spring;
 
 import io.craft.core.config.ConfigClient;
+import io.craft.core.constant.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -17,10 +18,6 @@ import java.util.Properties;
 public class CraftPlaceholderConfigurer extends PropertyPlaceholderConfigurer implements PropertyManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CraftPlaceholderConfigurer.class);
-
-    private static final String CONFIG_ROOT_NODE = "/config/";
-
-    private static final String APPLICATION_NAME_KEY = "application.name";
 
     private final PropertyPlaceholderConfigurerResolver configurerResolver;
 
@@ -101,7 +98,9 @@ public class CraftPlaceholderConfigurer extends PropertyPlaceholderConfigurer im
     }
 
     protected void loadProperty(ConfigurableListableBeanFactory beanFactory) throws Exception {
-        String prefix = CONFIG_ROOT_NODE + properties.getProperty(APPLICATION_NAME_KEY) + "/";
+        String applicationNamespace = properties.getProperty(Constants.APPLICATION_NAMESPACE);
+        String applicationName = properties.getProperty(Constants.APPLICATION_NAME);
+        String prefix = applicationNamespace + applicationName + Constants.PROPERTIES_PATH;
         Properties properties = configClient.watch(prefix, event -> {
             if (event.getValue() != null) {
                 Properties props = new Properties();

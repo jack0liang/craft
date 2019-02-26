@@ -1,5 +1,7 @@
 package io.craft.core.spring;
 
+import io.craft.core.config.EtcdClient;
+import io.craft.core.constant.Constants;
 import io.craft.core.registry.EtcdServiceRegistry;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.thrift.TProcessor;
@@ -33,22 +35,23 @@ public class CraftServiceDefinitionParser extends AbstractBeanDefinitionParser {
             throw new RuntimeException(e.getMessage(), e);
         }
 
-        //注册etcd service registry
-        BeanDefinitionRegistry registry = parserContext.getRegistry();
         BeanDefinitionBuilder registryBeanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(EtcdServiceRegistry.class);
         //取消lazy init 避免造成无法正常的注入到配置中心
         registryBeanDefinitionBuilder.setLazyInit(false);
-        registryBeanDefinitionBuilder.addPropertyValue("root", "${application.service.registry.root}");
-        registryBeanDefinitionBuilder.addPropertyValue("applicationName", "${application.name}");
-        registryBeanDefinitionBuilder.addPropertyValue("host", "${application.host}");
-        registryBeanDefinitionBuilder.addPropertyValue("port", "${application.port}");
-        registryBeanDefinitionBuilder.addPropertyValue("endpoints", "${application.service.registry}");
-        String beanName = parserContext.getReaderContext().generateBeanName(registryBeanDefinitionBuilder.getBeanDefinition());
-        registry.registerBeanDefinition(beanName, registryBeanDefinitionBuilder.getBeanDefinition());
+        String etcdClientBeanName = EtcdClient.class.getName();
+        registryBeanDefinitionBuilder.addPropertyReference("configClient", etcdClientBeanName);
+        registryBeanDefinitionBuilder.addPropertyValue("applicationNamespace", "${"+ Constants.APPLICATION_NAMESPACE+"}");
+        registryBeanDefinitionBuilder.addPropertyValue("applicationName", "${"+Constants.APPLICATION_NAME+"}");
+        registryBeanDefinitionBuilder.addPropertyValue("host", "${"+Constants.APPLICATION_HOST+"}");
+        registryBeanDefinitionBuilder.addPropertyValue("port", "${"+Constants.APPLICATION_PORT+"}");
+        registryBeanDefinitionBuilder.setInitMethodName("init");
+        String registryBeanName = parserContext.getReaderContext().generateBeanName(registryBeanDefinitionBuilder.getBeanDefinition());
+        //注册ServiceRegistry到BeanDefinitionRegistry
+        parserContext.getRegistry().registerBeanDefinition(registryBeanName, registryBeanDefinitionBuilder.getBeanDefinition());
 
         //设置service的bean依赖服务注册
         String[] dependsOn = definition.getDependsOn();
-        dependsOn = ArrayUtils.add(dependsOn, beanName);
+        dependsOn = ArrayUtils.add(dependsOn, registryBeanName);
         definition.setDependsOn(dependsOn);
 
         return (AbstractBeanDefinition) definition;

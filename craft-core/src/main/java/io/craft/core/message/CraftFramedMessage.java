@@ -116,8 +116,8 @@ public class CraftFramedMessage implements ReferenceCounted {
             this.traceId = null;
             this.header = new HashMap<>(0);
             this.buffer = null;
-            this.requestTime = null;
-            this.timeout = null;
+            this.requestTime = 0L;
+            this.timeout = 0;
         }
 
         public Builder setTraceId(String traceId) {

@@ -8,5 +8,16 @@ public class Constants {
 
     public final static int BUSINESS_THREAD_KEEP_ALIVE = 5;//MINUTES
 
-    public final static String PROTOCOL_MAGIC_WORD = "CRAFT-MAGIC";
+    public final static String APPLICATION_NAMESPACE = "application.namespace";
+
+    public final static String APPLICATION_NAME = "application.name";
+
+    public final static String APPLICATION_HOST = "application.host";
+
+    public final static String APPLICATION_PORT = "application.port";
+
+    public final static String PROPERTIES_PATH = "/properties/";
+
+    public final static String HOSTS_PATH = "/hosts/";
+
 }

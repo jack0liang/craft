@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
-public class EtcdClient implements ConfigClient<EtcdEvent>, Closeable {
+public class EtcdClient implements ConfigClient<EtcdEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(EtcdClient.class);
 
@@ -78,11 +78,17 @@ public class EtcdClient implements ConfigClient<EtcdEvent>, Closeable {
         }
     }
 
+    @Override
     public String put(String key, String value) throws ExecutionException, InterruptedException {
+        return put(key, value, true);
+    }
+
+    @Override
+    public String put(String key, String value, boolean keepAlive) throws ExecutionException, InterruptedException {
         ByteSequence bKey = ByteSequence.from(key, charset);
         ByteSequence bValue = ByteSequence.from(value, charset);
         PutOption option;
-        if (this.keepAlive) {
+        if (this.keepAlive && keepAlive) {
             option = PutOption.newBuilder().withLeaseId(leaseId).build();
         } else {
             option = PutOption.DEFAULT;
@@ -95,15 +101,18 @@ public class EtcdClient implements ConfigClient<EtcdEvent>, Closeable {
         }
     }
 
+    @Override
     public boolean delete(String key) throws ExecutionException, InterruptedException {
         ByteSequence bKey = ByteSequence.from(key, charset);
         DeleteResponse response = client.getKVClient().delete(bKey).get();
         return response.getDeleted() == 1;
     }
 
+    @Override
     public Properties watch(String prefix, Consumer<EtcdEvent> consumer) throws ExecutionException, InterruptedException {
         ByteSequence bPrefix = ByteSequence.from(prefix, charset);
         GetOption getOption = GetOption.newBuilder().withPrefix(bPrefix).build();
+        logger.info("etcd watch prefix={}", prefix);
         GetResponse response = client.getKVClient().get(bPrefix, getOption).get();
         Watch.Listener listener = Watch.listener(
                 resp -> {
@@ -113,7 +122,7 @@ public class EtcdClient implements ConfigClient<EtcdEvent>, Closeable {
                         String value;
                         String oldValue = event.getPrevKV().getValue().toString(charset);
 
-                        logger.debug("event:{}", JSON.toJSONString(event));
+                        logger.info("event:{}", JSON.toJSONString(event));
 
                         switch (event.getEventType()) {
 
@@ -138,7 +147,7 @@ public class EtcdClient implements ConfigClient<EtcdEvent>, Closeable {
                     logger.error("watch error prefix:{}, error:{}", prefix, t.getMessage(), t);
                 }
         );
-        WatchOption option = WatchOption.newBuilder().withPrefix(bPrefix).withPrevKV(true).withRevision(response.getHeader().getRevision()).build();
+        WatchOption option = WatchOption.newBuilder().withPrefix(bPrefix).withPrevKV(true).withRevision(response.getHeader().getRevision() + 1).build();
         Watch.Watcher watcher = client.getWatchClient().watch(bPrefix, option, listener);
         watcherSet.add(watcher);
         Properties properties = new Properties();
