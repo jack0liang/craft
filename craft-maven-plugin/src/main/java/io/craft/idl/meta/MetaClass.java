@@ -43,6 +43,9 @@ public class MetaClass {
     private Boolean required;
 
     @Builder.Default
+    private String visible = Constants.VISIBLE_PUBLIC;
+
+    @Builder.Default
     private List<MetaClass> fields = new ArrayList<>(0);
 
     @Builder.Default

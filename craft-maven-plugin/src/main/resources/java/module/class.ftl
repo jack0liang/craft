@@ -314,13 +314,13 @@ public <#if static?? && static>static </#if>class ${className} implements org.ap
                     <#if field.type.getName() == "LIST">
                         if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                             {
-                                org.apache.thrift.protocol.TList _list0 = iprot.readListBegin();
-                                struct.${field.name} = new java.util.ArrayList<${field.genericTypes[0].fullClassName}>(_list0.size);
-                                ${field.genericTypes[0].fullClassName} _elem1;
-                                for (int _i2 = 0; _i2 < _list0.size; ++_i2)
+                                org.apache.thrift.protocol.TList _list = iprot.readListBegin();
+                                struct.${field.name} = new java.util.ArrayList<${field.genericTypes[0].fullClassName}>(_list.size);
+                                ${field.genericTypes[0].fullClassName} _elem;
+                                for (int _i = 0; _i < _list.size; ++_i)
                                 {
-                                    _elem1 = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
-                                    struct.${field.name}.add(_elem1);
+                                    _elem = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
+                                    struct.${field.name}.add(_elem);
                                 }
                                 iprot.readListEnd();
                             }
@@ -330,13 +330,13 @@ public <#if static?? && static>static </#if>class ${className} implements org.ap
                     <#elseif field.type.getName() == "SET">
                         if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
                             {
-                                org.apache.thrift.protocol.TSet _set0 = iprot.readSetBegin();
-                                struct.${field.name} = new java.util.HashSet<${field.genericTypes[0].fullClassName}>(_set0.size);
-                                ${field.genericTypes[0].fullClassName} _elem1;
-                                for (int _i2 = 0; _i2 < _set0.size; ++_i2)
+                                org.apache.thrift.protocol.TSet _set = iprot.readSetBegin();
+                                struct.${field.name} = new java.util.HashSet<${field.genericTypes[0].fullClassName}>(_set.size);
+                                ${field.genericTypes[0].fullClassName} _elem;
+                                for (int _i = 0; _i < _set.size; ++_i)
                                 {
-                                    _elem1 = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
-                                    struct.${field.name}.add(_elem1);
+                                    _elem = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
+                                    struct.${field.name}.add(_elem);
                                 }
                                 iprot.readSetEnd();
                             }
@@ -346,15 +346,15 @@ public <#if static?? && static>static </#if>class ${className} implements org.ap
                     <#elseif field.type.getName() == "MAP">
                         if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
                             {
-                                org.apache.thrift.protocol.TMap _map6 = iprot.readMapBegin();
-                                struct.maps = new java.util.HashMap<${field.genericTypes[0].fullClassName},${field.genericTypes[1].fullClassName}>(2 * _map6.size);
-                                ${field.genericTypes[0].fullClassName} _key7;
-                                ${field.genericTypes[1].fullClassName} _val8;
-                                for (int _i9 = 0; _i9 < _map6.size; ++_i9)
+                                org.apache.thrift.protocol.TMap _map = iprot.readMapBegin();
+                                struct.${field.name} = new java.util.HashMap<${field.genericTypes[0].fullClassName},${field.genericTypes[1].fullClassName}>(2 * _map.size);
+                                ${field.genericTypes[0].fullClassName} _key;
+                                ${field.genericTypes[1].fullClassName} _val;
+                                for (int _i = 0; _i < _map.size; ++_i)
                                 {
-                                    _key7 = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
-                                    _val8 = iprot.read${field.genericTypes[1].type.getName()?lower_case?cap_first}();
-                                    struct.maps.put(_key7, _val8);
+                                    _key = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
+                                    _val = iprot.read${field.genericTypes[1].type.getName()?lower_case?cap_first}();
+                                    struct.${field.name}.put(_key, _val);
                                 }
                                 iprot.readMapEnd();
                             }

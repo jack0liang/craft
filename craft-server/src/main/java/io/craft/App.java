@@ -6,6 +6,7 @@ import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.message.CraftFramedMessage;
 import io.craft.core.transport.TByteBuf;
+import io.craft.core.util.TraceUtil;
 import io.craft.server.ChannelTransport;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -19,11 +20,15 @@ import org.apache.thrift.protocol.TMap;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TType;
 import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TIOStreamTransport;
+import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TTransportException;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.File;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Hello world!
@@ -39,7 +44,7 @@ public class App {
 
     public static void main(String[] args) throws Exception {
 
-        App app = new App(1087);
+        App app = new App(1088);
 
         app.request();
 
@@ -64,68 +69,29 @@ public class App {
 
     public void request() throws Exception {
 
-        Bootstrap bootstrap = new Bootstrap();
-        EventLoopGroup eventExecutors = new NioEventLoopGroup(10);
-        bootstrap
-                .group(eventExecutors)
-                .channel(NioSocketChannel.class)
-                .handler(new ChannelInitializer<SocketChannel>() {
+        Socket socket = new Socket("127.0.0.1", port);
+        socket.setReuseAddress(true);
 
-                    @Override
-                    protected void initChannel(SocketChannel ch) throws Exception {
-                        logger.debug("channel id = {}", ch.id());
-                        ch.pipeline()
-                                .addLast(new CraftFramedMessageDecoder())
-                                .addLast(new CraftFramedMessageEncoder())
-                                .addLast(new CraftThrowableEncoder())
-                                .addLast(new SimpleChannelInboundHandler<CraftFramedMessage>() {
+        TSocket transport = new TSocket(socket);
 
-                                    @Override
-                                    protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage msg) throws Exception {
-                                        ChannelTransport.channels.get(ctx.channel()).writeInt(msg.getBuffer().readableBytes());
-                                        ChannelTransport.channels.get(ctx.channel()).writeBytes(msg.getBuffer());
-                                        synchronized (ctx.channel()) {
-                                            ctx.channel().notify();
-                                        }
-                                    }
-                                })
-                        ;
-                    }
-                });
+        transport.setTimeout(5000);
 
-        ChannelFuture channelFuture = bootstrap.connect("127.0.0.1", port).syncUninterruptibly();
+        // 协议要和服务端一致
 
-        Channel channel = channelFuture.channel();
+        //transport.open();
 
-        ByteBuf inputBuffer = channel.alloc().directBuffer(1024);
+        TTransport tin = new TFramedTransport(new TIOStreamTransport(socket.getInputStream()));
 
-        TTransport outputTransport = new ChannelTransport(channel, inputBuffer);
-
-        TTransport tin = new TFramedTransport(new TByteBuf(inputBuffer));
-
-        TTransport tout = new TFramedTransport(outputTransport);
-
+        TTransport tout = new TFramedTransport(new TIOStreamTransport(socket.getOutputStream()));
 
         TProtocol pin = new TBinaryProtocol(tin);
 
         TProtocol pout = new TBinaryProtocol(tout);
-
-        //写入messageId
-        pout.writeString(UUID.randomUUID().toString().replace("-", ""));
-        //写入map
-        pout.writeMapBegin(new TMap(TType.STRING, TType.STRING, 1));
-        pout.writeString("UID");
-        pout.writeString(UUID.randomUUID().toString());
-        pout.writeMapEnd();
         UserService.Client client = new UserService.Client(pin, pout);
-
-        List<Long> ids = new ArrayList<>();
-        for(int i = 0; i<1000; i++) {
-            ids.add(Long.valueOf(i));
-        }
+        TraceUtil.addHeader("UID", "123456");
 
         try {
-            client.gets(ids);
+            client.ping();
             logger.debug("request success");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
