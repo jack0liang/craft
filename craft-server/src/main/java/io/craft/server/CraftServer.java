@@ -61,6 +61,8 @@ public class CraftServer implements Closeable {
             throw new RuntimeException("get ip failed, error=" + e.getMessage(), e);
         }
 
+        ip = "127.0.0.1";
+
         int port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
 
         TProcessor processor = applicationContext.getBean(TProcessor.class);

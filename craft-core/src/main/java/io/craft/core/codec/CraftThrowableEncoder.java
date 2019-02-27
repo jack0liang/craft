@@ -39,7 +39,7 @@ public class CraftThrowableEncoder extends MessageToMessageEncoder<Throwable> {
         exception.write(pout);
         pout.writeMessageEnd();
 
-        CraftFramedMessage message = CraftFramedMessage.newBuilder().setBuffer(writeBuffer).build();
+        CraftFramedMessage message = new CraftFramedMessage(writeBuffer, 0, 0);
 
         out.add(message);
     }

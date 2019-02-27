@@ -9,7 +9,7 @@ public interface ${className} {
     <#if method.deprecated>
     @java.lang.Deprecated
     </#if>
-    ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}</#list>) throws org.apache.thrift.TException;
+    ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException;
 
     </#list>
     <@format blank=4>
@@ -60,11 +60,15 @@ public interface ${className} {
 
             public ${method.name}_result getResult(I iface, ${method.name}_args args) throws org.apache.thrift.TException {
                 ${method.name}_result result = new ${method.name}_result();
+                io.craft.core.util.TraceUtil.setTraceId(args.getTraceId());
+                io.craft.core.util.TraceUtil.setHeader(args.getHeader());
                 <#if method.returnValue.className != "void">
                 result.${method.returnValue.name} = iface.${method.name}(<#list method.parameters as parameter>args.${parameter.name}<#sep>, </#sep></#list>);
                 <#else>
                 iface.${method.name}(<#list method.parameters as parameter>args.${parameter.name}<#sep>, </#sep></#list>);
                 </#if>
+                //请求完成之后就清空trace信息
+                io.craft.core.util.TraceUtil.clear();
                 return result;
             }
         }
@@ -74,18 +78,7 @@ public interface ${className} {
 
     public static class Client extends org.apache.thrift.TServiceClient implements ${className} {
 
-        public static class Factory implements org.apache.thrift.TServiceClientFactory<Client> {
-
-            public Factory() {}
-
-            public Client getClient(org.apache.thrift.protocol.TProtocol prot) {
-                return new Client(prot);
-            }
-
-            public Client getClient(org.apache.thrift.protocol.TProtocol iprot, org.apache.thrift.protocol.TProtocol oprot) {
-                return new Client(iprot, oprot);
-            }
-        }
+        public static final String SERVICE_NAME = "${packageName}";
 
         public Client(org.apache.thrift.protocol.TProtocol prot)
         {
@@ -110,6 +103,14 @@ public interface ${className} {
         private void send_${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
             ${method.name}_args args = new ${method.name}_args();
+            args.setServiceName(SERVICE_NAME);
+            String traceId = io.craft.core.util.TraceUtil.getTraceId();
+            if (traceId != null) {
+                args.setTraceId(traceId);
+            } else {
+                args.setTraceId(io.craft.core.util.TraceUtil.generateTraceId());
+            }
+            args.setHeader(io.craft.core.util.TraceUtil.getHeader());
             <#list method.parameters as parameter>
             args.set${parameter.name?cap_first}(${parameter.name});
             </#list>

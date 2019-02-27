@@ -55,10 +55,7 @@ public class CraftBusinessTask implements Runnable {
             TTransport tout = new TByteBuf(writeBuffer);
             TProtocol pout = new TBinaryProtocol(tout);
 
-            CraftFramedMessage returnMessage = CraftFramedMessage.newBuilder()
-                    .setTraceId(message.getTraceId())
-                    .setBuffer(writeBuffer)
-                    .build();
+            CraftFramedMessage returnMessage = new CraftFramedMessage(writeBuffer, 0, 0);
 
             logger.debug("message {} process", message);
             processor.process(pin, pout);

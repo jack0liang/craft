@@ -3,6 +3,7 @@ package io.craft.core.codec;
 import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
 import io.craft.core.transport.TByteBuf;
+import io.craft.core.util.TraceUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -104,27 +105,10 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
                     ByteBuf buffer = ctx.alloc().directBuffer(frameLength);
                     readBuffer.readBytes(buffer);
 
-                    CraftFramedMessage.Builder builder = CraftFramedMessage.newBuilder();
-                    TProtocol protocol = new TBinaryProtocol(new TByteBuf(buffer));
-                    //解析messageId
-                    String traceId = protocol.readString();
-                    builder.setTraceId(traceId);
-                    //设置请求时间
-                    builder.setRequestTime(requestTime);
-                    //解析timeout，调试设置为500ms
-                    builder.setTimeout(500);
-                    //解析header
-                    TMap map = protocol.readMapBegin();
-                    for(int i = 0; i<map.size; ++i) {
-                        builder.addHeader(protocol.readString(), protocol.readString());
-                    }
-                    protocol.readMapEnd();
-                    builder.setBuffer(buffer);
-                    out.add(builder.build());
+                    out.add(new CraftFramedMessage(buffer, requestTime, 500));
                     //每次请求消息读取完后就丢弃已读byte
                     readBuffer.discardReadBytes();
 
-                    logger.debug("recv request complete, traceId={}", traceId);
                 } finally {
                     clearMessage();
                 }

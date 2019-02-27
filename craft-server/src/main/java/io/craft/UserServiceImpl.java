@@ -2,9 +2,9 @@ package io.craft;
 
 import io.craft.abc.UserService;
 import io.craft.abc.model.UserModel;
+import io.craft.core.util.TraceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void ping() throws TException {
-        logger.debug("ping");
+        logger.debug("ping, traceId={}", TraceUtil.getTraceId());
     }
 
 }

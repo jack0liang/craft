@@ -19,19 +19,7 @@ public class CraftFramedMessageEncoder extends MessageToByteEncoder<CraftFramedM
     @Override
     protected void encode(ChannelHandlerContext ctx, CraftFramedMessage message, ByteBuf out) throws Exception {
         ByteBuf buffer = message.getBuffer();
-        out.writeInt(0);
-        TProtocol protocol = new TBinaryProtocol(new TByteBuf(out));
-        //写入messageId
-        protocol.writeString(message.getTraceId());
-        //写入header
-        TMap map = new TMap(TType.STRING, TType.STRING, message.getHeader().size());
-        protocol.writeMapBegin(map);
-        for(Map.Entry<String, String> entry : message.getHeader().entrySet()) {
-            protocol.writeString(entry.getKey());
-            protocol.writeString(entry.getValue());
-        }
-        protocol.writeMapEnd();
+        out.writeInt(buffer.readableBytes());
         out.writeBytes(buffer);
-        out.setInt(0, out.readableBytes() - 4);
     }
 }

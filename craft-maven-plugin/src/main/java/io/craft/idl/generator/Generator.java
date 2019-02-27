@@ -1,15 +1,16 @@
 package io.craft.idl.generator;
 
-import com.google.common.collect.Lists;
 import io.craft.core.annotation.*;
 import io.craft.idl.constant.ClassType;
 import io.craft.idl.meta.MetaClass;
 import io.craft.idl.meta.MetaMethod;
 import org.apache.commons.lang3.StringUtils;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
+import static io.craft.idl.constant.Constants.*;
 
 @SuppressWarnings({"unchecked"})
 public abstract class Generator {
@@ -69,6 +70,29 @@ public abstract class Generator {
             //处理参数
             Set<Integer> idSet = new HashSet<>();
             List<MetaClass> metaParameters = new ArrayList<>();
+            //添加serviceName
+            MetaClass serviceNameClass = parse(String.class);
+            serviceNameClass.setName("serviceName");
+            serviceNameClass.setSequence((short) -1);
+            serviceNameClass.setDeprecated(false);
+            serviceNameClass.setRequired(true);
+            metaParameters.add(serviceNameClass);
+            //添加traceId
+            MetaClass traceIdClass = parse(String.class);
+            traceIdClass.setName("traceId");
+            traceIdClass.setSequence((short) -2);
+            traceIdClass.setDeprecated(false);
+            traceIdClass.setRequired(true);
+            metaParameters.add(traceIdClass);
+            //添加header
+            MetaClass headerClass = parse(ParameterizedTypeImpl.make(Map.class, new Type[]{String.class, String.class}, Map.class));
+            headerClass.setName("header");
+            headerClass.setSequence((short) -3);
+            headerClass.setDeprecated(false);
+            headerClass.setRequired(true);
+            metaParameters.add(headerClass);
+
+            List<MetaClass> methodParameters = new ArrayList<>();
             for(Parameter parameter : method.getParameters()) {
                 Sequence sequence = parameter.getAnnotation(Sequence.class);
                 if (sequence == null) {
@@ -78,7 +102,7 @@ public abstract class Generator {
                 if (idSet.contains(seq)) {
                     throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " @Attribute注解value重复");
                 }
-                if (seq< Short.MIN_VALUE || seq > Short.MAX_VALUE) {
+                if (seq < 0 || seq > Short.MAX_VALUE) {
                     throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " @Attribute注解value超过short范围：["+Short.MIN_VALUE+"-"+Short.MAX_VALUE+"]");
                 }
                 Required required = parameter.getAnnotation(Required.class);
@@ -89,9 +113,10 @@ public abstract class Generator {
                 parameterClass.setRequired(required != null ? required.value() : false);
                 parameterClass.setSequence((short) seq);
                 metaParameters.add(parameterClass);
+                methodParameters.add(parameterClass);
             }
 
-            MetaMethod metaMethod = new MetaMethod(method.getName(), returnValue, metaParameters, (method.getAnnotation(Deprecated.class) != null));
+            MetaMethod metaMethod = new MetaMethod(method.getName(), returnValue, methodParameters, (method.getAnnotation(Deprecated.class) != null), VISIBLE_PUBLIC);
 
             serviceMethods.add(metaMethod);
 
