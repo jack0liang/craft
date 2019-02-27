@@ -68,7 +68,7 @@ public class ProxyMessageHandler extends ByteToMessageDecoder {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         logger.debug("channelInactive:"+ctx);
-        super.channelInactive(ctx);
+        //super.channelInactive(ctx);
         if (readBuffer.refCnt() > 0) {
             readBuffer.release(readBuffer.refCnt());
         }
