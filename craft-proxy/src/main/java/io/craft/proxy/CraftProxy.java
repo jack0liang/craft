@@ -16,7 +16,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -30,7 +29,6 @@ public class CraftProxy implements Closeable {
     public void proxy() throws InterruptedException, IOException {
         applicationContext = new ClassPathXmlApplicationContext("proxy.xml");
         propertyManager = applicationContext.getBean(PropertyManager.class);
-        String host = propertyManager.getProperty(Constants.APPLICATION_HOST);
 
         int port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
 
@@ -44,7 +42,7 @@ public class CraftProxy implements Closeable {
         try {
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .localAddress(new InetSocketAddress(host, port))
+                    .localAddress(port)
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
@@ -55,7 +53,7 @@ public class CraftProxy implements Closeable {
                     });
             ChannelFuture f = bootstrap.bind().sync();
             //端口监听成功
-            logger.debug("proxy start success on {}:{}", host, port);
+            logger.debug("proxy start success on port:{}", port);
 
             channel = f.channel();
 
