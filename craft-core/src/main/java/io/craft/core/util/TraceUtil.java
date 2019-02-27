@@ -25,7 +25,7 @@ public class TraceUtil {
     public static Map<String, String> getHeader() {
         Map<String, String> head = header.get();
         if (head == null) {
-            head = new HashMap<>();
+            head = new HashMap<>(0);
             header.set(head);
         }
         return head;
