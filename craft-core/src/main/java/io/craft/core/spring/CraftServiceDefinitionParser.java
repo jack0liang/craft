@@ -3,17 +3,19 @@ package io.craft.core.spring;
 import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
 import io.craft.core.registry.EtcdServiceRegistry;
+import io.craft.core.util.IPUtil;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.thrift.TProcessor;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParserDelegate;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
+
+import java.net.UnknownHostException;
 
 public class CraftServiceDefinitionParser extends AbstractBeanDefinitionParser {
 
@@ -35,6 +37,13 @@ public class CraftServiceDefinitionParser extends AbstractBeanDefinitionParser {
             throw new RuntimeException(e.getMessage(), e);
         }
 
+        String ip;
+        try {
+            ip = IPUtil.getLocalIPV4();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException("get ip failed, error=" + e.getMessage(), e);
+        }
+
         BeanDefinitionBuilder registryBeanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(EtcdServiceRegistry.class);
         //取消lazy init 避免造成无法正常的注入到配置中心
         registryBeanDefinitionBuilder.setLazyInit(false);
@@ -42,7 +51,7 @@ public class CraftServiceDefinitionParser extends AbstractBeanDefinitionParser {
         registryBeanDefinitionBuilder.addPropertyReference("configClient", etcdClientBeanName);
         registryBeanDefinitionBuilder.addPropertyValue("applicationNamespace", "${"+ Constants.APPLICATION_NAMESPACE+"}");
         registryBeanDefinitionBuilder.addPropertyValue("applicationName", "${"+Constants.APPLICATION_NAME+"}");
-        registryBeanDefinitionBuilder.addPropertyValue("host", "${"+Constants.APPLICATION_HOST+"}");
+        registryBeanDefinitionBuilder.addPropertyValue("host", ip);
         registryBeanDefinitionBuilder.addPropertyValue("port", "${"+Constants.APPLICATION_PORT+"}");
         registryBeanDefinitionBuilder.setInitMethodName("init");
         String registryBeanName = parserContext.getReaderContext().generateBeanName(registryBeanDefinitionBuilder.getBeanDefinition());
