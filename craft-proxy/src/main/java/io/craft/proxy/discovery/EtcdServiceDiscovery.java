@@ -2,6 +2,7 @@ package io.craft.proxy.discovery;
 
 import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +42,11 @@ public class EtcdServiceDiscovery {
             final ServiceHolder serviceHolder = new ServiceHolder();
             Properties props = etcdClient.watch(path, event->{
                 String value = event.getValue();
-                serviceHolder.addService(value);
+                String oldValue = event.getOldValue();
+                serviceHolder.addService(value,oldValue);
             });
             logger.info(props.toString());
-            props.values().forEach(item->serviceHolder.addService((String)item));
+            props.values().forEach(item->serviceHolder.addService((String)item,null));
             app2ServiceList.put(applicationName,serviceHolder);
         }
         String value = app2ServiceList.get(applicationName).next();
@@ -72,7 +74,12 @@ public class EtcdServiceDiscovery {
 
         public ServiceHolder(){}
 
-        public synchronized void addService(String service){
+        public synchronized void addService(String service,String old){
+            if(StringUtils.isBlank(service)) {
+                if(StringUtils.isNotBlank(old))
+                    serviceList.remove(old);
+                return ;
+            }
             if(!serviceList.contains(service))
                 serviceList.add(service);
         }
