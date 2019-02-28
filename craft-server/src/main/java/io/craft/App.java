@@ -89,6 +89,9 @@ public class App {
         TProtocol pout = new TBinaryProtocol(tout);
         UserService.Client client = new UserService.Client(pin, pout);
         TraceUtil.addHeader("UID", "123456");
+        for(int i = 0; i<100; i++) {
+            TraceUtil.addHeader("HEADER-" + i, "HEADER-VALUE-" + i);
+        }
 
         try {
             client.ping();

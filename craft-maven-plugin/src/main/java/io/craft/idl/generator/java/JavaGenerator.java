@@ -24,6 +24,7 @@ public class JavaGenerator extends Generator {
         configuration.setDefaultEncoding("UTF-8");
         configuration.setClassForTemplateLoading(getClass(), "/java");
         configuration.setSharedVariable("format", new FormatDirective());
+        configuration.setNumberFormat("#");
     }
 
 

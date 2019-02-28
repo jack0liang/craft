@@ -73,21 +73,21 @@ public abstract class Generator {
             //添加serviceName
             MetaClass serviceNameClass = parse(String.class);
             serviceNameClass.setName("serviceName");
-            serviceNameClass.setSequence((short) -1);
+            serviceNameClass.setSequence(Short.MIN_VALUE);
             serviceNameClass.setDeprecated(false);
             serviceNameClass.setRequired(true);
             metaParameters.add(serviceNameClass);
             //添加traceId
             MetaClass traceIdClass = parse(String.class);
             traceIdClass.setName("traceId");
-            traceIdClass.setSequence((short) -2);
+            traceIdClass.setSequence((short) (Short.MIN_VALUE + 1));
             traceIdClass.setDeprecated(false);
             traceIdClass.setRequired(true);
             metaParameters.add(traceIdClass);
             //添加header
             MetaClass headerClass = parse(ParameterizedTypeImpl.make(Map.class, new Type[]{String.class, String.class}, Map.class));
             headerClass.setName("header");
-            headerClass.setSequence((short) -3);
+            headerClass.setSequence((short) (Short.MIN_VALUE + 2));
             headerClass.setDeprecated(false);
             headerClass.setRequired(true);
             metaParameters.add(headerClass);
@@ -115,6 +115,10 @@ public abstract class Generator {
                 metaParameters.add(parameterClass);
                 methodParameters.add(parameterClass);
             }
+
+            //排序参数
+            Collections.sort(metaParameters, Comparator.comparing(MetaClass::getSequence));
+            Collections.sort(methodParameters, Comparator.comparing(MetaClass::getSequence));
 
             MetaMethod metaMethod = new MetaMethod(method.getName(), returnValue, methodParameters, (method.getAnnotation(Deprecated.class) != null), VISIBLE_PUBLIC);
 
@@ -186,7 +190,7 @@ public abstract class Generator {
                 if (idSet.contains(seq)) {
                     throw new Exception(cls.getName() + "." + field.getName() + " @Attribute注解value重复");
                 }
-                if (seq< Short.MIN_VALUE || seq > Short.MAX_VALUE) {
+                if (seq < Short.MIN_VALUE || seq > Short.MAX_VALUE) {
                     throw new Exception(cls.getName() + "." + field.getName() + " @Attribute注解value超过short范围：["+Short.MIN_VALUE+"-"+Short.MAX_VALUE+"]");
                 }
                 Required required = field.getAnnotation(Required.class);
@@ -203,6 +207,10 @@ public abstract class Generator {
                 fieldClass.setSequence((short) seq);
                 metaClass.getFields().add(fieldClass);
             }
+
+            //排序字段
+            Collections.sort(metaClass.getFields(), Comparator.comparing(MetaClass::getSequence));
+
             metaClass.setClassName(cls.getSimpleName());
             metaClass.setFullClassName(packageName + "." + metaClass.getClassName());
 

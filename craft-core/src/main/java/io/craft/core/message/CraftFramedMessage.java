@@ -1,14 +1,7 @@
 package io.craft.core.message;
 
-import io.craft.core.transport.TByteBuf;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCounted;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
-import org.springframework.util.Assert;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class CraftFramedMessage implements ReferenceCounted {
 
