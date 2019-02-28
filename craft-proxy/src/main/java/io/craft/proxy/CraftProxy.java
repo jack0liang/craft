@@ -3,6 +3,7 @@ package io.craft.proxy;
 
 import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.constant.Constants;
+import io.craft.core.pool.ChannelPoolManager;
 import io.craft.core.spring.PropertyManager;
 import io.craft.proxy.handler.ProxyMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -54,7 +55,7 @@ public class CraftProxy implements Closeable {
             ChannelFuture f = bootstrap.bind().sync();
             //端口监听成功
             logger.debug("proxy start success on port:{}", port);
-
+            ChannelPoolManager.initGroup(workerGroup);
             channel = f.channel();
 
             channel.closeFuture().sync();
