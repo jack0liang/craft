@@ -31,9 +31,7 @@ public class ProxyMessageHandler extends ChannelInboundHandlerAdapter {
         super.channelActive(ctx);
         String applicationName = propertyManager.getProperty(Constants.APPLICATION_NAME);
         String serviceAddr = discovery.findService(applicationName);
-        String[] si = serviceAddr.split(":");
-        InetSocketAddress address = new InetSocketAddress(si[0], Integer.parseInt(si[1]));
-        pool = ChannelPoolManager.getChannel(applicationName,address);
+        pool = ChannelPoolManager.getChannel(applicationName,serviceAddr);
         Future<Channel> futureChannel = pool.acquire();
         innerChannel = futureChannel.get();
         ChannelPipeline pipeline = innerChannel.pipeline();

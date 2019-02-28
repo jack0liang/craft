@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChannelPoolManager {
-    private static Map<String, ChannelPoolMap<InetSocketAddress, SimpleChannelPool>> app2PoolMap = new HashMap<>();
+    private static Map<String, AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool>> app2PoolMap = new HashMap<>();
     private static Bootstrap bootstrap = new Bootstrap();
     static {
         bootstrap.channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY,true).option(ChannelOption.SO_KEEPALIVE,true);
@@ -41,18 +41,49 @@ public class ChannelPoolManager {
 //        return Holder.instance;
 //    }
 
+    public static void removeChannel(String applicationName,String serviceAddr){
+        InetSocketAddress address = getInetSocketAddress(serviceAddr);
+        removeChannel(applicationName,address);
+    }
+
+    public static void removeChannel(String applicationName,InetSocketAddress service){
+        AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool> poolMap = initAppPool(applicationName);
+        poolMap.get(service).close();
+        poolMap.remove(service);
+    }
+
+    public static SimpleChannelPool getChannel(String applicationName,String serviceAddr){
+        InetSocketAddress address = getInetSocketAddress(serviceAddr);
+        return getChannel(applicationName,address);
+    }
+
+    private static InetSocketAddress getInetSocketAddress(String serviceAddr) {
+        String[] si = serviceAddr.split(":");
+        return new InetSocketAddress(si[0], Integer.parseInt(si[1]));
+    }
+
     public static SimpleChannelPool getChannel(String applicationName,InetSocketAddress service){
-        ChannelPoolMap<InetSocketAddress, SimpleChannelPool> poolMap = app2PoolMap.get(applicationName);
-        if(poolMap==null){
-            poolMap = new AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool>() {
-                @Override
-                protected SimpleChannelPool newPool(InetSocketAddress key) {
-                    return new FixedChannelPool(bootstrap.remoteAddress(key),new CraftChannelPoolHandler(),2);
-                }
-            };
-            app2PoolMap.put(applicationName,poolMap);
-        }
+        ChannelPoolMap<InetSocketAddress, SimpleChannelPool> poolMap = initAppPool(applicationName);
         return poolMap.get(service);
+    }
+
+    private static AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool> initAppPool(String applicationName) {
+        AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool> poolMap = app2PoolMap.get(applicationName);
+        if(poolMap==null) {
+            synchronized (ChannelPoolManager.class) {
+                poolMap = app2PoolMap.get(applicationName);
+                if(poolMap==null) {
+                    poolMap = new AbstractChannelPoolMap<InetSocketAddress, SimpleChannelPool>() {
+                        @Override
+                        protected SimpleChannelPool newPool(InetSocketAddress key) {
+                            return new FixedChannelPool(bootstrap.remoteAddress(key), new CraftChannelPoolHandler(), 2);
+                        }
+                    };
+                    app2PoolMap.put(applicationName, poolMap);
+                }
+            }
+        }
+        return poolMap;
     }
 
     public static void main(String[] args) {
