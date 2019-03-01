@@ -142,6 +142,10 @@ public class CraftClient {
         pin.readMessageEnd();
     }
 
+    public void close() {
+        executors.shutdownGracefully().syncUninterruptibly();
+    }
+
     public static void setChannelMessage(Channel channel, CraftFramedMessage message) {
         Attribute<CraftFramedMessage> attrMessage = channel.attr(Constants.CHANNEL_MESSAGE);
         attrMessage.set(message);

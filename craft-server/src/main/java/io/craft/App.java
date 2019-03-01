@@ -29,6 +29,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
@@ -38,46 +41,50 @@ public class App {
 
     private int port;
 
+    private UserService.Client client;
+
     App(int port) {
         this.port = port;
+        this.client = new UserService.Client("127.0.0.1", port);
     }
 
     public static void main(String[] args) throws Exception {
 
-        App app = new App(1089);
+        TimeUnit.SECONDS.sleep(10);
 
-        app.request();
+        App app = new App(1088);
 
-//        ExecutorService executorService = Executors.newFixedThreadPool(10);
-//
-//        for(int i=0; i<10000; i++) {
-//            executorService.submit(new Runnable() {
-//
-//                @Override
-//                public void run() {
-//                    try {
-//                        app.request();
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            });
-//        }
+        ExecutorService executorService = Executors.newFixedThreadPool(30);
+
+        for(int i=0; i<10000; i++) {
+            executorService.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        app.request();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
 
 
     }
 
     public void request() throws Exception {
 
-        UserService.Client client = new UserService.Client("127.0.0.1", 1088);
         TraceUtil.addHeader("UID", "123456");
         for(int i = 0; i<100; i++) {
             TraceUtil.addHeader("HEADER-" + i, "HEADER-VALUE-" + i);
         }
 
         try {
+            long beginTime = System.currentTimeMillis();
             client.ping();
-            logger.debug("request success");
+            long endTime = System.currentTimeMillis();
+            logger.debug("request success, latency={}ms", (endTime - beginTime));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
