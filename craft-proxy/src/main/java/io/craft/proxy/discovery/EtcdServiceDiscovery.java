@@ -2,6 +2,7 @@ package io.craft.proxy.discovery;
 
 import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
+import io.craft.core.pool.ChannelPoolManager;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class EtcdServiceDiscovery {
     public synchronized String findService(String applicationName) throws Exception {
         String path = getPath(applicationName);
         if(app2ServiceList.get(applicationName)==null){
-            final ServiceHolder serviceHolder = new ServiceHolder();
+            final ServiceHolder serviceHolder = new ServiceHolder(applicationName);
             Properties props = etcdClient.watch(path, event->{
                 String value = event.getValue();
                 String oldValue = event.getOldValue();
@@ -65,19 +66,25 @@ public class EtcdServiceDiscovery {
     }
 
     private static class ServiceHolder{
+        private String applicationName;
         private int pos = 0;
         private List<String> serviceList = new ArrayList<>();
 
-        public ServiceHolder(List<String> serviceList){
+        public ServiceHolder(String applicationName,List<String> serviceList){
             this.serviceList = serviceList;
+            this.applicationName = applicationName;
         }
 
-        public ServiceHolder(){}
+        public ServiceHolder(String applicationName){
+            this.applicationName = applicationName;
+        }
 
         public synchronized void addService(String service,String old){
             if(StringUtils.isBlank(service)) {
-                if(StringUtils.isNotBlank(old))
+                if(StringUtils.isNotBlank(old)) {
                     serviceList.remove(old);
+                    ChannelPoolManager.removeChannel(applicationName,old);
+                }
                 return ;
             }
             if(!serviceList.contains(service))
