@@ -69,25 +69,7 @@ public class App {
 
     public void request() throws Exception {
 
-        Socket socket = new Socket("127.0.0.1", port);
-        socket.setReuseAddress(true);
-
-        TSocket transport = new TSocket(socket);
-
-        //transport.setTimeout(5000);
-
-        // 协议要和服务端一致
-
-        //transport.open();
-
-        TTransport tin = new TFramedTransport(new TIOStreamTransport(socket.getInputStream()));
-
-        TTransport tout = new TFramedTransport(new TIOStreamTransport(socket.getOutputStream()));
-
-        TProtocol pin = new TBinaryProtocol(tin);
-
-        TProtocol pout = new TBinaryProtocol(tout);
-        UserService.Client client = new UserService.Client(pin, pout);
+        UserService.Client client = new UserService.Client("127.0.0.1", 1088);
         TraceUtil.addHeader("UID", "123456");
         for(int i = 0; i<100; i++) {
             TraceUtil.addHeader("HEADER-" + i, "HEADER-VALUE-" + i);

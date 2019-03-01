@@ -76,31 +76,30 @@ public interface ${className} {
         </#list>
     }
 
-    public static class Client extends org.apache.thrift.TServiceClient implements ${className} {
+    public static class Client extends io.craft.core.client.CraftClient implements ${className} {
 
         public static final String SERVICE_NAME = "${packageName}";
 
-        public Client(org.apache.thrift.protocol.TProtocol prot)
-        {
-            super(prot, prot);
+        public Client() {
+            super();
         }
 
-        public Client(org.apache.thrift.protocol.TProtocol iprot, org.apache.thrift.protocol.TProtocol oprot) {
-            super(iprot, oprot);
+        public Client(String host, int port) {
+            super(host, port);
         }
 
         <#list methods as method>
         public ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
-            send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
+            io.netty.channel.Channel channel = send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
             <#if method.returnValue.className == "void">
-            recv_${method.name}();
+            recv_${method.name}(channel);
             <#else>
-            return recv_${method.name}();
+            return recv_${method.name}(channel);
             </#if>
         }
 
-        private void send_${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
+        private io.netty.channel.Channel send_${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
             ${method.name}_args args = new ${method.name}_args();
             args.setServiceName(SERVICE_NAME);
@@ -114,13 +113,13 @@ public interface ${className} {
             <#list method.parameters as parameter>
             args.set${parameter.name?cap_first}(${parameter.name});
             </#list>
-            sendBase("${method.name}", args);
+            return sendBase("${method.name}", args);
         }
 
-        private ${method.returnValue.fullClassName} recv_${method.name}() throws org.apache.thrift.TException
+        private ${method.returnValue.fullClassName} recv_${method.name}(io.netty.channel.Channel channel) throws org.apache.thrift.TException
         {
             ${method.name}_result result = new ${method.name}_result();
-            receiveBase(result, "${method.name}");
+            receiveBase(channel, result, "${method.name}");
             <#if method.returnValue.className != "void">
             if (result.${method.returnValue.name} != null) {
                 return result.${method.returnValue.name};

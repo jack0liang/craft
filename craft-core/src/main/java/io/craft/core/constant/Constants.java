@@ -1,5 +1,12 @@
 package io.craft.core.constant;
 
+import io.craft.core.message.CraftFramedMessage;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+
 public class Constants {
 
     public final static int DEFAULT_MAX_FRAME_LENGTH = 16384000;//16m
@@ -23,5 +30,13 @@ public class Constants {
     public final static short TRACE_ID_SEQUENCE = (short) (Short.MIN_VALUE + 1);
 
     public final static short HEADER_SEQUENCE = (short) (Short.MIN_VALUE + 2);
+
+    public static final String CHANNEL_MESSAGE_NAME = "channel-message";
+
+    public static final AttributeKey<CraftFramedMessage> CHANNEL_MESSAGE = AttributeKey.newInstance(CHANNEL_MESSAGE_NAME);
+
+    public static final String CHANNEL_MESSAGE_ID_NAME = "channel-message-id";
+
+    public static final AttributeKey<Integer> CHANNEL_MESSAGE_ID = AttributeKey.newInstance(CHANNEL_MESSAGE_ID_NAME);
 
 }
