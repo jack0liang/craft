@@ -44,7 +44,7 @@ public class App {
 
     public static void main(String[] args) throws Exception {
 
-        App app = new App(1088);
+        App app = new App(1089);
 
         app.request();
 
@@ -74,7 +74,7 @@ public class App {
 
         TSocket transport = new TSocket(socket);
 
-        transport.setTimeout(5000);
+        //transport.setTimeout(5000);
 
         // 协议要和服务端一致
 

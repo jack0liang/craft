@@ -21,5 +21,4 @@ public class MetaMethod {
 
     private Boolean deprecated;
 
-    private String visible;
 }

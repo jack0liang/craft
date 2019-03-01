@@ -10,7 +10,8 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
-import static io.craft.idl.constant.Constants.*;
+
+import static io.craft.core.constant.Constants.*;
 
 @SuppressWarnings({"unchecked"})
 public abstract class Generator {
@@ -73,21 +74,21 @@ public abstract class Generator {
             //添加serviceName
             MetaClass serviceNameClass = parse(String.class);
             serviceNameClass.setName("serviceName");
-            serviceNameClass.setSequence(Short.MIN_VALUE);
+            serviceNameClass.setSequence(SERVICE_NAME_SEQUENCE);
             serviceNameClass.setDeprecated(false);
             serviceNameClass.setRequired(true);
             metaParameters.add(serviceNameClass);
             //添加traceId
             MetaClass traceIdClass = parse(String.class);
             traceIdClass.setName("traceId");
-            traceIdClass.setSequence((short) (Short.MIN_VALUE + 1));
+            traceIdClass.setSequence(TRACE_ID_SEQUENCE);
             traceIdClass.setDeprecated(false);
             traceIdClass.setRequired(true);
             metaParameters.add(traceIdClass);
             //添加header
             MetaClass headerClass = parse(ParameterizedTypeImpl.make(Map.class, new Type[]{String.class, String.class}, Map.class));
             headerClass.setName("header");
-            headerClass.setSequence((short) (Short.MIN_VALUE + 2));
+            headerClass.setSequence(HEADER_SEQUENCE);
             headerClass.setDeprecated(false);
             headerClass.setRequired(true);
             metaParameters.add(headerClass);
@@ -120,7 +121,7 @@ public abstract class Generator {
             Collections.sort(metaParameters, Comparator.comparing(MetaClass::getSequence));
             Collections.sort(methodParameters, Comparator.comparing(MetaClass::getSequence));
 
-            MetaMethod metaMethod = new MetaMethod(method.getName(), returnValue, methodParameters, (method.getAnnotation(Deprecated.class) != null), VISIBLE_PUBLIC);
+            MetaMethod metaMethod = new MetaMethod(method.getName(), returnValue, methodParameters, (method.getAnnotation(Deprecated.class) != null));
 
             serviceMethods.add(metaMethod);
 

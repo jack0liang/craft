@@ -18,4 +18,10 @@ public class Constants {
 
     public final static String HOSTS_PATH = "/hosts/";
 
+    public final static short SERVICE_NAME_SEQUENCE = Short.MIN_VALUE;
+
+    public final static short TRACE_ID_SEQUENCE = (short) (Short.MIN_VALUE + 1);
+
+    public final static short HEADER_SEQUENCE = (short) (Short.MIN_VALUE + 2);
+
 }
