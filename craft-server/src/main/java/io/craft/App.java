@@ -29,7 +29,7 @@ public class App {
 
         App app = new App(1088);
 
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
 
         for(int i=0; i<10000; i++) {
             executorService.submit(new Runnable() {
