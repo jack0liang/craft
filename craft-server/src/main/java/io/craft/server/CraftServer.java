@@ -24,7 +24,6 @@ import sun.misc.Signal;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
@@ -61,7 +60,7 @@ public class CraftServer implements Closeable {
             throw new RuntimeException("get ip failed, error=" + e.getMessage(), e);
         }
 
-        ip = "127.0.0.1";
+        //ip = "127.0.0.1";
 
         int port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
 
@@ -85,7 +84,7 @@ public class CraftServer implements Closeable {
 
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .localAddress(new InetSocketAddress(ip, port))
+                    .localAddress(new InetSocketAddress(port))
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
 

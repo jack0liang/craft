@@ -1,37 +1,40 @@
 package io.craft.proxy;
 
 
+import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftThrowableEncoder;
+import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
-import io.craft.core.pool.ChannelPoolManager;
-import io.craft.core.spring.PropertyManager;
+import io.craft.proxy.discovery.EtcdServiceDiscovery;
 import io.craft.proxy.handler.ProxyMessageHandler;
+import io.craft.proxy.pool.ChannelPoolManager;
+import io.craft.proxy.util.PropertyUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class CraftProxy implements Closeable {
-    private ConfigurableApplicationContext applicationContext;
-    private PropertyManager propertyManager;
+//    private ConfigurableApplicationContext applicationContext;
+//    private PropertyManager propertyManager;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel channel;
 
-    public void proxy() throws InterruptedException, IOException {
-        applicationContext = new ClassPathXmlApplicationContext("proxy.xml");
-        propertyManager = applicationContext.getBean(PropertyManager.class);
+    public void proxy() throws InterruptedException, IOException, ExecutionException {
+//        applicationContext = new ClassPathXmlApplicationContext("proxy.xml");
+//        propertyManager = applicationContext.getBean(PropertyManager.class);
+        EtcdServiceDiscovery discovery = initServiceDiscovery();
 
-        int port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
+        int port = Integer.valueOf(PropertyUtil.getProperty(Constants.APPLICATION_PORT));
 
         CraftThrowableEncoder exceptionEncoder = new CraftThrowableEncoder();
 
@@ -49,7 +52,9 @@ public class CraftProxy implements Closeable {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             logger.info("channel id = {}", ch.id());
-                            ch.pipeline().addLast(exceptionEncoder).addLast(new ProxyMessageHandler(applicationContext));
+                            ch.pipeline().addLast(exceptionEncoder)
+                                    .addLast(new CraftFramedMessageDecoder())
+                                    .addLast(new ProxyMessageHandler(discovery));
                         }
                     });
             ChannelFuture f = bootstrap.bind().sync();
@@ -62,6 +67,18 @@ public class CraftProxy implements Closeable {
         } finally {
             close();
         }
+    }
+
+    private EtcdServiceDiscovery initServiceDiscovery() throws ExecutionException, InterruptedException {
+        EtcdClient etcdClient = new EtcdClient();
+        etcdClient.setKeepAlive(true);
+        String endpoints = PropertyUtil.getProperty("etcd.endpoints");
+        etcdClient.setEndpoints(endpoints.split(","));
+        etcdClient.init();
+        EtcdServiceDiscovery discovery = new EtcdServiceDiscovery();
+        discovery.setApplicationNamespace(PropertyUtil.getProperty(Constants.APPLICATION_NAMESPACE));
+        discovery.setEtcdClient(etcdClient);
+        return discovery;
     }
 
     @Override
@@ -103,11 +120,11 @@ public class CraftProxy implements Closeable {
             throw new IOException(e.getMessage(), e);
         }
         //关闭spring容器
-        if (applicationContext != null) {
-            applicationContext.close();
-            applicationContext = null;
-            logger.debug("spring container close successful");
-        }
+//        if (applicationContext != null) {
+//            applicationContext.close();
+//            applicationContext = null;
+//            logger.debug("spring container close successful");
+//        }
     }
 
     public static void main(String... args) throws Exception {

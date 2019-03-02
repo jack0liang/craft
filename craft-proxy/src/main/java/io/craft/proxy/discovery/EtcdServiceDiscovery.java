@@ -2,7 +2,7 @@ package io.craft.proxy.discovery;
 
 import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
-import io.craft.core.pool.ChannelPoolManager;
+import io.craft.proxy.pool.ChannelPoolManager;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
