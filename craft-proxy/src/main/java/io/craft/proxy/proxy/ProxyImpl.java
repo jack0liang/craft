@@ -17,6 +17,7 @@ import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 public class ProxyImpl implements Proxy {
 
@@ -29,6 +30,7 @@ public class ProxyImpl implements Proxy {
     private ChannelPool pool;
 
     private Bootstrap bootstrap;
+
 
     public ProxyImpl(InetSocketAddress address, EventLoopGroup executors, ProxyPoolHandler handler) {
         this.address = address;
@@ -49,8 +51,9 @@ public class ProxyImpl implements Proxy {
     }
 
     private void accept0(Channel server, Channel client, CraftFramedMessage message) {
-        Attribute<Channel> attrClient = server.attr(Constants.SERVER_ATTRIBUTE_CLIENT);
-        attrClient.set(client);
+        //Attribute<Channel> attrClient = server.attr(Constants.SERVER_ATTRIBUTE_CLIENT);
+        //attrClient.set(client);
+
         server.writeAndFlush(message);
     }
 
