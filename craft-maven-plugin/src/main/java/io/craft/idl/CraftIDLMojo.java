@@ -2,6 +2,7 @@ package io.craft.idl;
 
 import io.craft.idl.generator.Generator;
 import io.craft.idl.generator.java.JavaGenerator;
+import io.craft.idl.generator.thrift.ThriftGenerator;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
@@ -25,8 +26,12 @@ public class CraftIDLMojo extends AbstractMojo {
             URL classes = new URL("file://" + project.getBuild().getOutputDirectory() + "/");
             ClassLoader custom = new URLClassLoader( new URL[] { classes }, getClass().getClassLoader());
             Class clazz = custom.loadClass(serviceClass);
-            Generator generator = new JavaGenerator(clazz, project.getBuild().getSourceDirectory());
+            Generator generator;
+            generator = new JavaGenerator(clazz, project.getBuild().getSourceDirectory());
             generator.process();
+
+//            generator = new ThriftGenerator(clazz, project.getBuild().getSourceDirectory());
+//            generator.process();
         } catch (Exception e) {
             throw new MojoExecutionException("发生异常：" + e.getMessage(), e);
         }

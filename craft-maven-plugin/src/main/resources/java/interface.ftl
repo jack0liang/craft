@@ -91,15 +91,15 @@ public interface ${className} {
         <#list methods as method>
         public ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
-            io.netty.channel.Channel channel = send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
+            int messageId = send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
             <#if method.returnValue.className == "void">
-            recv_${method.name}(channel);
+            recv_${method.name}(messageId);
             <#else>
-            return recv_${method.name}(channel);
+            return recv_${method.name}(messageId);
             </#if>
         }
 
-        private io.netty.channel.Channel send_${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
+        private int send_${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
             ${method.name}_args args = new ${method.name}_args();
             args.setServiceName(SERVICE_NAME);
@@ -116,10 +116,10 @@ public interface ${className} {
             return sendBase("${method.name}", args);
         }
 
-        private ${method.returnValue.fullClassName} recv_${method.name}(io.netty.channel.Channel channel) throws org.apache.thrift.TException
+        private ${method.returnValue.fullClassName} recv_${method.name}(int messageId) throws org.apache.thrift.TException
         {
             ${method.name}_result result = new ${method.name}_result();
-            receiveBase(channel, result, "${method.name}");
+            receiveBase(messageId, result, "${method.name}");
             <#if method.returnValue.className != "void">
             if (result.${method.returnValue.name} != null) {
                 return result.${method.returnValue.name};
