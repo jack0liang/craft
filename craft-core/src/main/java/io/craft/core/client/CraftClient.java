@@ -2,7 +2,6 @@ package io.craft.core.client;
 
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
-import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
 import io.craft.core.transport.TByteBuf;
@@ -96,78 +95,76 @@ public class CraftClient {
         this.proxyPort = proxyPort;
     }
 
-    private int write(String methodName, TBase<?,?> args, byte type) throws TException {
+    private int write(String methodName, TBase<?, ?> args, byte type) throws TException {
         int messageId = sequence.getAndIncrement();
-        messageMap.put(messageId, new MessageEntity());
-        return write(messageId, methodName, args, type);
-    }
+        MessageEntity messageEntity = new MessageEntity();
 
-    private int write(int messageId, String methodName, TBase<?,?> args, byte type) throws TException {
-        MessageEntity messageEntity = messageMap.get(messageId);
-
-        if (messageEntity == null) {
-            throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "processMap not contain key=" + messageId);
-        }
+        messageMap.put(messageId, messageEntity);
 
         logger.debug("seq={}, send data", messageId);
 
-        synchronized (messageEntity) {
+        try {
+            synchronized (messageEntity) {
 
-            WriteEntity entity = new WriteEntity(methodName, args, type, messageId);
+                WriteEntity entity = new WriteEntity(methodName, args, type, messageId);
 
-            if (isConnected.get()) {
-                //已连接的,直接写到channel
-                doWrite(entity);
-            } else {
-                //没连接上, 统一先放入队列
-                queue.offer(entity);
-                //开始连接, 这里只需要一个线程去连接, 其他的只需要往队列丢就够了
-                if (isConnecting.compareAndSet(false, true)) {
-                    this.bootstrap.remoteAddress(this.proxyHost, this.proxyPort);
-                    ChannelFuture future = this.bootstrap.connect();
-                    this.channel = future.channel();
-                    if (future.isDone()) {
-                        processConnected(future);
-                    } else {
-                        future.addListener(f -> {
-                            processConnected((ChannelFuture) f);
-                        });
+                if (isConnected.get()) {
+                    //已连接的,直接写到channel
+                    doWrite(entity);
+                } else {
+                    //没连接上, 统一先放入队列
+                    queue.offer(entity);
+                    //开始连接, 这里只需要一个线程去连接, 其他的只需要往队列丢就够了
+                    if (isConnecting.compareAndSet(false, true)) {
+                        this.bootstrap.remoteAddress(this.proxyHost, this.proxyPort);
+                        ChannelFuture future = this.bootstrap.connect();
+                        this.channel = future.channel();
+                        if (future.isDone()) {
+                            processConnected(future);
+                        } else {
+                            future.addListener(f -> {
+                                processConnected((ChannelFuture) f);
+                            });
+                        }
                     }
                 }
+
+                logger.debug("seq={}, wait response", messageId);
+
+                try {
+                    messageEntity.wait();
+                } catch (InterruptedException e) {
+                    throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "wait error, error=" + e.getMessage());
+                }
+
             }
-
-            logger.debug("seq={}, wait response", messageId);
-
-            try {
-                messageEntity.wait();
-            } catch (InterruptedException e) {
-                throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "wait error, error=" + e.getMessage());
-            }
-
-            if (messageEntity.getResponse() == null) {
-                throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "response is null");
-            }
-
-            return messageId;
+        } catch (Throwable t) {
+            //发生任何异常, 都要把messageMap里面对应的messageId去掉
+            logger.debug("remove messageMap, messageId={}", messageId);
+            messageMap.remove(messageId);
+            throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "system error, error=" + t.getMessage());
         }
+
+        return messageId;
     }
 
     private void processConnected(ChannelFuture future) throws TException {
         isConnecting.set(false);
+
+        WriteEntity message;
+
         if (!future.isSuccess()) {
             logger.error("socket connect error, error={}", future.cause().getMessage(), future.cause());
             //逐个通知
-            for(Map.Entry<Integer, MessageEntity> entry : messageMap.entrySet()) {
-                synchronized (entry.getValue()) {
-                    entry.getValue().notify();
-                }
+            while((message = queue.poll()) != null) {
+                processReceived(message.getMessageId(), null);
             }
             throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "socket connect error, error=" + future.cause().getMessage());
         }
         logger.debug("connected channel={}", channel);
         isConnected.set(true);
 
-        WriteEntity message;
+
         while((message = queue.poll()) != null) {
             doWrite(message);
         }
@@ -178,10 +175,26 @@ public class CraftClient {
             //写入成功,不用处理
             return;
         }
-        logger.error("write failed, retry, error={}", future.cause().getMessage(), future.cause());
+        //发生异常
+        logger.error("write failed, error={}", future.cause().getMessage(), future.cause());
         isConnected.set(false);
-        synchronized (messageMap.get(messageId)) {
-            messageMap.get(messageId).notify();
+        processReceived(messageId, null);
+    }
+
+    private void processReceived(int messageId, CraftFramedMessage message) {
+        MessageEntity messageEntity = messageMap.get(messageId);
+        Throwable t = null;
+        if (message == null) {
+            t = new Throwable("error");
+        }
+        if (t == null) {
+            logger.debug("process received, messageId={}", messageId);
+        } else {
+            logger.error("process received error, messageId={}", messageId, t);
+        }
+        synchronized (messageEntity) {
+            messageEntity.setResponse(message);
+            messageEntity.notify();
         }
     }
 
@@ -196,6 +209,7 @@ public class CraftClient {
         pout.writeMessageEnd();
 
         CraftFramedMessage message = new CraftFramedMessage(buffer, 0, 0);
+        logger.debug("do write message messageId={}", entity.getMessageId());
         messageMap.get(entity.getMessageId()).setRequest(message);
         ChannelFuture future = channel.writeAndFlush(message);
         if (future.isDone()) {
@@ -221,34 +235,37 @@ public class CraftClient {
     }
 
     protected void receiveBase(int messageId, TBase<?,?> result, String methodName) throws TException {
-        MessageEntity messageEntity = messageMap.get(messageId);
+        try {
+            MessageEntity messageEntity = messageMap.get(messageId);
 
-        logger.debug("seq={}, response received", messageId);
+            logger.debug("seq={}, response received", messageId);
 
-        CraftFramedMessage response = messageEntity.getResponse();
+            CraftFramedMessage response = messageEntity.getResponse();
 
-        if (response == null) {
-            throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "response is null");
-        }
+            if (response == null) {
+                throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "response is null");
+            }
 
-        TTransport tin = new TByteBuf(response.getBuffer());
-        TProtocol pin = new TBinaryProtocol(tin);
+            TTransport tin = new TByteBuf(response.getBuffer());
+            TProtocol pin = new TBinaryProtocol(tin);
 
-        TMessage msg = pin.readMessageBegin();
-        if (msg.type == TMessageType.EXCEPTION) {
-            TApplicationException x = new TApplicationException();
-            x.read(pin);
+            TMessage msg = pin.readMessageBegin();
+            if (msg.type == TMessageType.EXCEPTION) {
+                TApplicationException x = new TApplicationException();
+                x.read(pin);
+                pin.readMessageEnd();
+                throw x;
+            }
+            if (msg.seqid != messageId) {
+                throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID,
+                        String.format("%s failed: out of sequence response: expected %d but got %d", methodName, messageId, msg.seqid));
+            }
+            result.read(pin);
             pin.readMessageEnd();
-            throw x;
+        } finally {
+            logger.debug("remove messageMap, messageId={}", messageId);
+            messageMap.remove(messageId);
         }
-        if (msg.seqid != messageId) {
-            throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID,
-                    String.format("%s failed: out of sequence response: expected %d but got %d", methodName, messageId, msg.seqid));
-        }
-        result.read(pin);
-        pin.readMessageEnd();
-
-        messageMap.remove(messageId);
     }
 
     public void close() {
@@ -321,10 +338,8 @@ public class CraftClient {
             isConnected.set(false);
             logger.error("socket read error, error={}", cause.getMessage(), cause);
             //通知所有等待的线程
-            for(Map.Entry<Integer, MessageEntity> entry : messageMap.entrySet()) {
-                synchronized (entry.getValue()) {
-                    entry.getValue().notify();
-                }
+            for(Integer messageId : messageMap.keySet()) {
+                processReceived(messageId, null);
             }
         }
 
@@ -345,12 +360,7 @@ public class CraftClient {
 
             buffer.resetReaderIndex();
 
-            MessageEntity messageEntity = messageMap.get(msg.seqid);
-
-            synchronized (messageEntity) {
-                messageEntity.setResponse(message);
-                messageEntity.notify();
-            }
+            processReceived(msg.seqid, message);
         }
     }
 }
