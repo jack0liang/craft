@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TProtocol;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.util.Assert;
 
 import java.util.Map;
@@ -29,8 +28,8 @@ public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramed
     private SimpleChannelPool pool;
     private Future<Channel> futureChannel;
 
-    public ProxyMessageHandler(BeanFactory beanFactory) {
-        this.discovery = beanFactory.getBean(EtcdServiceDiscovery.class);
+    public ProxyMessageHandler(EtcdServiceDiscovery discovery) {
+        this.discovery = discovery;
     }
 
     @Override
