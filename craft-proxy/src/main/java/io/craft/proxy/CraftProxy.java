@@ -1,11 +1,12 @@
 package io.craft.proxy;
 
 
+import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.constant.Constants;
-import io.craft.core.pool.ChannelPoolManager;
 import io.craft.core.spring.PropertyManager;
 import io.craft.proxy.handler.ProxyMessageHandler;
+import io.craft.proxy.pool.ChannelPoolManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -49,7 +50,9 @@ public class CraftProxy implements Closeable {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             logger.info("channel id = {}", ch.id());
-                            ch.pipeline().addLast(exceptionEncoder).addLast(new ProxyMessageHandler(applicationContext));
+                            ch.pipeline().addLast(exceptionEncoder)
+                                    .addLast(new CraftFramedMessageDecoder())
+                                    .addLast(new ProxyMessageHandler(applicationContext));
                         }
                     });
             ChannelFuture f = bootstrap.bind().sync();

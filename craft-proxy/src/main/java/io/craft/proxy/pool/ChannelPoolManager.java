@@ -1,4 +1,4 @@
-package io.craft.core.pool;
+package io.craft.proxy.pool;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
