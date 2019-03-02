@@ -18,6 +18,7 @@ import java.util.Map;
 import static io.craft.core.constant.Constants.*;
 
 @Slf4j
+@Deprecated
 public class ClientMessageHander extends SimpleChannelInboundHandler<CraftFramedMessage> {
 
     private Proxy proxy;
@@ -29,6 +30,7 @@ public class ClientMessageHander extends SimpleChannelInboundHandler<CraftFramed
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
+        /*
         ByteBuf buffer = message.getBuffer();
         buffer.markReaderIndex();
         TByteBuf tin = new TByteBuf(buffer);
@@ -109,6 +111,7 @@ public class ClientMessageHander extends SimpleChannelInboundHandler<CraftFramed
         message.retain();
 
         proxy.accept(ctx.channel(), message);
+        */
     }
 
     @Override
