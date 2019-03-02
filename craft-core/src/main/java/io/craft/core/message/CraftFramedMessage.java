@@ -18,6 +18,10 @@ public class CraftFramedMessage implements ReferenceCounted {
         this.timeout = timeout;
     }
 
+    public CraftFramedMessage(ByteBuf buffer) {
+        this(buffer, 0, 0);
+    }
+
     public ByteBuf getBuffer() {
         return buffer;
     }

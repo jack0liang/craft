@@ -91,15 +91,15 @@ public interface ${className} {
         <#list methods as method>
         public ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
-            int messageId = send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
+            io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> future = send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
             <#if method.returnValue.className == "void">
-            recv_${method.name}(messageId);
+            recv_${method.name}(future);
             <#else>
-            return recv_${method.name}(messageId);
+            return recv_${method.name}(future);
             </#if>
         }
 
-        private int send_${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
+        private io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> send_${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
             ${method.name}_args args = new ${method.name}_args();
             args.setServiceName(SERVICE_NAME);
@@ -116,10 +116,10 @@ public interface ${className} {
             return sendBase("${method.name}", args);
         }
 
-        private ${method.returnValue.fullClassName} recv_${method.name}(int messageId) throws org.apache.thrift.TException
+        private ${method.returnValue.fullClassName} recv_${method.name}(io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> future) throws org.apache.thrift.TException
         {
             ${method.name}_result result = new ${method.name}_result();
-            receiveBase(messageId, result, "${method.name}");
+            receiveBase(future, result, "${method.name}");
             <#if method.returnValue.className != "void">
             if (result.${method.returnValue.name} != null) {
                 return result.${method.returnValue.name};

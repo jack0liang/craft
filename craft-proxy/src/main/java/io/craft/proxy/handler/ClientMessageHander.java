@@ -3,6 +3,7 @@ package io.craft.proxy.handler;
 import io.craft.core.message.CraftFramedMessage;
 import io.craft.core.transport.TByteBuf;
 import io.craft.proxy.proxy.Proxy;
+import io.craft.proxy.proxy.ProxyClient;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -20,11 +21,11 @@ import static io.craft.core.constant.Constants.*;
 @Slf4j
 public class ClientMessageHander extends SimpleChannelInboundHandler<CraftFramedMessage> {
 
-    private Proxy proxy;
+    private ProxyClient proxyClient;
 
-    public ClientMessageHander(Proxy proxy) {
+    public ClientMessageHander(ProxyClient proxyClient) {
         super();
-        this.proxy = proxy;
+        this.proxyClient = proxyClient;
     }
 
     @Override
@@ -108,7 +109,7 @@ public class ClientMessageHander extends SimpleChannelInboundHandler<CraftFramed
 
         message.retain();
 
-        proxy.accept(ctx.channel(), message);
+        proxyClient.write(ctx.channel(), msg, message);
     }
 
     @Override

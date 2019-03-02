@@ -31,12 +31,4 @@ public class Constants {
 
     public final static short HEADER_SEQUENCE = (short) (Short.MIN_VALUE + 2);
 
-    public static final String CHANNEL_MESSAGE_NAME = "channel-message";
-
-    public static final AttributeKey<CraftFramedMessage> CHANNEL_MESSAGE = AttributeKey.newInstance(CHANNEL_MESSAGE_NAME);
-
-    public static final String CHANNEL_MESSAGE_ID_NAME = "channel-message-id";
-
-    public static final AttributeKey<Integer> CHANNEL_MESSAGE_ID = AttributeKey.newInstance(CHANNEL_MESSAGE_ID_NAME);
-
 }

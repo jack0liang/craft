@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
@@ -14,24 +13,28 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class App {
 
-    private int port;
+    static {
+        System.setProperty("proxy.host", "127.0.0.1");
+        System.setProperty("proxy.port", "1089");
+        System.setProperty("proxy.connect.timeout", "5000");
+    }
 
     private UserService.Client client;
 
-    App(int port) {
-        this.port = port;
-        this.client = new UserService.Client("127.0.0.1", port);
+    App() {
+        this.client = new UserService.Client();
     }
 
     public static void main(String[] args) throws Exception {
 
 //        TimeUnit.SECONDS.sleep(10);
 
-        App app = new App(1088);
+        App app = new App();
+        //app.request();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
 
-        for(int i=0; i<10000; i++) {
+        for(int i=0; i<100000; i++) {
             executorService.submit(new Runnable() {
 
                 @Override
