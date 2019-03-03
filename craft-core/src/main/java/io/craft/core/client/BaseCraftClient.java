@@ -75,10 +75,14 @@ public class BaseCraftClient {
         int messageId = sequence.getAndIncrement();
         //生成future
         DefaultPromise<CraftFramedMessage> promise = new DefaultPromise<>(this.executors.next());
+        promise.setUncancellable();
         //设置Producer的消息ID
         producer.setMessageId(messageId);
         //将消息ID跟future绑定起来
-        promiseMap.put(messageId, promise);
+        //在处理连接错误时,write不允许写入,否则会发生错误
+        synchronized (promiseMap) {
+            promiseMap.put(messageId, promise);
+        }
 
         if (isConnected.get()) {
             //已连接的,直接写到channel
@@ -91,12 +95,14 @@ public class BaseCraftClient {
             //开始连接, 这里只需要一个线程去连接, 其他的只需要往队列丢就够了
             if (isConnecting.compareAndSet(false, true)) {
                 ChannelFuture cf = this.bootstrap.connect();
-                this.channel = cf.channel();
-                if (cf.isDone()) {
-                    processConnected(cf);
+                //当连接失败时,触发,如果连接成功,则在ClientChannelHandler#channelActive中执行
+                if (cf.isDone() && !cf.isSuccess()) {
+                    processConnectFailed(cf);
                 } else {
                     cf.addListener(f -> {
-                        processConnected(f);
+                        if (!f.isSuccess()) {
+                            processConnectFailed((ChannelFuture) f);
+                        }
                     });
                 }
             }
@@ -105,21 +111,23 @@ public class BaseCraftClient {
         return promise;
     }
 
-    private void processConnected(Future future) throws TException {
+    private void processConnectFailed(ChannelFuture future) throws TException {
         isConnecting.set(false);
+        MessageProducer producer;
+        logger.error("socket connect error, error={}", future.cause().getMessage(), future.cause());
+        //逐个通知
+        while((producer = queue.poll()) != null) {
+            processReceived(producer.getMessageId(), null, future.cause());
+        }
+    }
+
+    private void processConnected(Channel channel) throws TException {
+        this.channel = channel;
+        isConnecting.set(false);
+        isConnected.set(true);
+        logger.debug("connected channel={}", channel);
 
         MessageProducer producer;
-        if (!future.isSuccess()) {
-            logger.error("socket connect error, error={}", future.cause().getMessage(), future.cause());
-            //逐个通知
-            while((producer = queue.poll()) != null) {
-                processReceived(producer.getMessageId(), null, future.cause());
-            }
-            throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "socket connect error, error=" + future.cause().getMessage());
-        }
-        logger.debug("connected channel={}", channel);
-        isConnected.set(true);
-
         while((producer = queue.poll()) != null) {
             doWrite(producer);
         }
@@ -134,10 +142,12 @@ public class BaseCraftClient {
     }
 
     private void processReceived(int messageId, CraftFramedMessage message, Throwable cause) throws TException {
+        logger.debug("promise get, messageId={}", messageId);
         DefaultPromise<CraftFramedMessage> promise = promiseMap.get(messageId);
         promiseMap.remove(messageId);
+        logger.debug("promise removed, messageId={}, promise={}", messageId, promise);
         if (cause != null) {
-            logger.error("process received error, messageId={}, error={}", messageId, cause.getMessage());
+            logger.error("process received error, messageId={}, error={}", messageId, cause.getMessage(), cause);
             promise.setFailure(cause);
         } else {
             logger.debug("process received success, messageId={}", messageId);
@@ -179,12 +189,23 @@ public class BaseCraftClient {
     private class ClientChannelHandler extends SimpleChannelInboundHandler<CraftFramedMessage> {
 
         @Override
+        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            processConnected(ctx.channel());
+        }
+
+        @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
             //读取发生异常, 关闭连接, 等待下一次重连
             close();
             logger.error("socket read error, error={}", cause.getMessage(), cause);
             //通知所有等待的线程
-            for(Integer messageId : promiseMap.keySet()) {
+            Integer[] messageIds;
+            //此处需要加一小段锁,不允许write再写入内容,避免发出错误的通知
+            synchronized (promiseMap) {
+                messageIds = new Integer[promiseMap.size()];
+                messageIds = promiseMap.keySet().toArray(messageIds);
+            }
+            for(Integer messageId : messageIds) {
                 processReceived(messageId, null, cause);
             }
         }

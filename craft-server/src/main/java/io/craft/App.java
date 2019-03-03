@@ -32,7 +32,7 @@ public class App {
         App app = new App();
         //app.request();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         for(int i=0; i<100000; i++) {
             executorService.submit(new Runnable() {

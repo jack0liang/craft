@@ -1,6 +1,8 @@
 package io.craft.idl.generator;
 
+import com.google.common.collect.Lists;
 import io.craft.core.annotation.*;
+import io.craft.core.exception.CraftException;
 import io.craft.idl.constant.ClassType;
 import io.craft.idl.meta.MetaClass;
 import io.craft.idl.meta.MetaMethod;
@@ -67,6 +69,20 @@ public abstract class Generator {
             returnValue.setName("success");
             returnValue.setSequence((short) 0);
             returnValue.setRequired(returnValueRequired != null && returnValueRequired.value());
+            returnValue.setFields(Lists.newArrayList());
+
+            MetaClass returnException = MetaClass.builder()
+                    .className("CraftException")
+                    .fullClassName("io.craft.core.exception.CraftException")
+                    .name("exception")
+                    .type(ClassType.STRUCT)
+                    .deprecated(false)
+                    .required(false)
+                    .sequence((short) 1)
+                    .build();
+
+
+
 
             //处理参数
             Set<Integer> idSet = new HashSet<>();
@@ -126,15 +142,18 @@ public abstract class Generator {
             serviceMethods.add(metaMethod);
 
             MetaClass methodArgs = MetaClass.builder().className(method.getName() + "_args").fullClassName(method.getName() + "_args").fields(metaParameters).build();
-            MetaClass methodRet = MetaClass.builder().className(method.getName() + "_result").fullClassName(method.getName() + "_result").name("result").build();
+            MetaClass methodRet = MetaClass.builder()
+                    .className(method.getName() + "_result")
+                    .fullClassName(method.getName() + "_result")
+                    .name("result")
+                    .fields(Lists.newArrayList())
+                    .build();
 
-            if (methodRet.getFields() == null) {
-                methodRet.setFields(new ArrayList<>(2));
-            }
-
-            if (!returnValue.getType().equals(ClassType.VOID)) {
+            if (!ClassType.VOID.equals(returnValue.getType())) {
                 methodRet.getFields().add(returnValue);
             }
+
+            methodRet.getFields().add(returnException);
 
             serviceFields.add(methodArgs);
             serviceFields.add(methodRet);

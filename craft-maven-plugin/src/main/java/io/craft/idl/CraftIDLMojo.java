@@ -2,7 +2,6 @@ package io.craft.idl;
 
 import io.craft.idl.generator.Generator;
 import io.craft.idl.generator.java.JavaGenerator;
-import io.craft.idl.generator.thrift.ThriftGenerator;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;

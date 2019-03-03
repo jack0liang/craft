@@ -19,9 +19,13 @@ import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class CraftClient extends BaseCraftClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(CraftClient.class);
 
     private static String PROXY_HOST;
 
@@ -62,6 +66,7 @@ public class CraftClient extends BaseCraftClient {
         try {
             message = future.get();
         } catch (Throwable t) {
+            logger.error(t.getMessage(), t);
             throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "future get error, error=" + t.getMessage());
         }
 

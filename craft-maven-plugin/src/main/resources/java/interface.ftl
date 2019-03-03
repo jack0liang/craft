@@ -9,7 +9,7 @@ public interface ${className} {
     <#if method.deprecated>
     @java.lang.Deprecated
     </#if>
-    ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException;
+    ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws io.craft.core.exception.CraftException;
 
     </#list>
     <@format blank=4>
@@ -80,18 +80,15 @@ public interface ${className} {
 
         public static final String SERVICE_NAME = "${packageName}";
 
-        public Client() {
-            super();
-        }
-
-        public Client(String host, int port) {
-            super(host, port);
-        }
-
         <#list methods as method>
-        public ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
+        public ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws io.craft.core.exception.CraftException
         {
-            io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> future = send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
+            io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> future;
+            try {
+                future = send_${method.name}(<#list method.parameters as parameter>${parameter.name}<#sep>, </#sep></#list>);
+            } catch (Throwable t) {
+                throw new io.craft.core.exception.CraftException(400, "Bad Request");
+            }
             <#if method.returnValue.className == "void">
             recv_${method.name}(future);
             <#else>
@@ -116,16 +113,25 @@ public interface ${className} {
             return sendBase("${method.name}", args);
         }
 
-        private ${method.returnValue.fullClassName} recv_${method.name}(io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> future) throws org.apache.thrift.TException
+        private ${method.returnValue.fullClassName} recv_${method.name}(io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> future) throws io.craft.core.exception.CraftException
         {
             ${method.name}_result result = new ${method.name}_result();
-            receiveBase(future, result, "${method.name}");
+            try {
+                receiveBase(future, result, "${method.name}");
+            } catch(io.craft.core.exception.CraftException ce) {
+                throw ce;
+            } catch(Throwable t) {
+                throw new io.craft.core.exception.CraftException(500, "Internal Server Error");
+            }
+            if (result.exception != null) {
+                throw result.exception;
+            }
             <#if method.returnValue.className != "void">
             if (result.${method.returnValue.name} != null) {
                 return result.${method.returnValue.name};
             }
             <#if method.returnValue.required>
-            throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "${method.name} failed: unknown result");
+            throw new io.craft.core.exception.CraftException(400, "${method.name} failed: unknown result");
             <#else>
             return null;
             </#if>

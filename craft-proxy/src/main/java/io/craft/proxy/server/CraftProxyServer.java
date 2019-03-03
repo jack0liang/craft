@@ -28,7 +28,7 @@ import java.net.InetSocketAddress;
 
 public class CraftProxyServer implements Closeable {
 
-    private EventLoopGroup executors = new NioEventLoopGroup(2);
+    private EventLoopGroup executors = new NioEventLoopGroup(5);
 
     private ProxyClient proxyClient = new ProxyClient(
             new Bootstrap()

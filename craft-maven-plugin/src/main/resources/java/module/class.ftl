@@ -314,13 +314,13 @@ public <#if static?? && static>static </#if>class ${className} implements org.ap
                     <#if field.type.getName() == "LIST">
                         if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                             {
-                                org.apache.thrift.protocol.TList _list = iprot.readListBegin();
-                                struct.${field.name} = new java.util.ArrayList<${field.genericTypes[0].fullClassName}>(_list.size);
-                                ${field.genericTypes[0].fullClassName} _elem;
-                                for (int _i = 0; _i < _list.size; ++_i)
+                                org.apache.thrift.protocol.TList list = iprot.readListBegin();
+                                struct.${field.name} = new java.util.ArrayList<${field.genericTypes[0].fullClassName}>(list.size);
+                                ${field.genericTypes[0].fullClassName} val;
+                                for (int i = 0; i < list.size; ++i)
                                 {
-                                    _elem = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
-                                    struct.${field.name}.add(_elem);
+                                    val = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
+                                    struct.${field.name}.add(val);
                                 }
                                 iprot.readListEnd();
                             }
@@ -330,13 +330,13 @@ public <#if static?? && static>static </#if>class ${className} implements org.ap
                     <#elseif field.type.getName() == "SET">
                         if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
                             {
-                                org.apache.thrift.protocol.TSet _set = iprot.readSetBegin();
-                                struct.${field.name} = new java.util.HashSet<${field.genericTypes[0].fullClassName}>(_set.size);
-                                ${field.genericTypes[0].fullClassName} _elem;
-                                for (int _i = 0; _i < _set.size; ++_i)
+                                org.apache.thrift.protocol.TSet set = iprot.readSetBegin();
+                                struct.${field.name} = new java.util.HashSet<${field.genericTypes[0].fullClassName}>(set.size);
+                                ${field.genericTypes[0].fullClassName} val;
+                                for (int i = 0; i < set.size; ++i)
                                 {
-                                    _elem = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
-                                    struct.${field.name}.add(_elem);
+                                    val = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
+                                    struct.${field.name}.add(val);
                                 }
                                 iprot.readSetEnd();
                             }
@@ -346,15 +346,15 @@ public <#if static?? && static>static </#if>class ${className} implements org.ap
                     <#elseif field.type.getName() == "MAP">
                         if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
                             {
-                                org.apache.thrift.protocol.TMap _map = iprot.readMapBegin();
-                                struct.${field.name} = new java.util.HashMap<${field.genericTypes[0].fullClassName},${field.genericTypes[1].fullClassName}>(2 * _map.size);
-                                ${field.genericTypes[0].fullClassName} _key;
-                                ${field.genericTypes[1].fullClassName} _val;
-                                for (int _i = 0; _i < _map.size; ++_i)
+                                org.apache.thrift.protocol.TMap map = iprot.readMapBegin();
+                                struct.${field.name} = new java.util.HashMap<${field.genericTypes[0].fullClassName},${field.genericTypes[1].fullClassName}>(2 * map.size);
+                                ${field.genericTypes[0].fullClassName} key;
+                                ${field.genericTypes[1].fullClassName} val;
+                                for (int i = 0; i < map.size; ++i)
                                 {
-                                    _key = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
-                                    _val = iprot.read${field.genericTypes[1].type.getName()?lower_case?cap_first}();
-                                    struct.${field.name}.put(_key, _val);
+                                    key = iprot.read${field.genericTypes[0].type.getName()?lower_case?cap_first}();
+                                    val = iprot.read${field.genericTypes[1].type.getName()?lower_case?cap_first}();
+                                    struct.${field.name}.put(key, val);
                                 }
                                 iprot.readMapEnd();
                             }
@@ -418,28 +418,28 @@ public <#if static?? && static>static </#if>class ${className} implements org.ap
                 <#if field.type.getName() == "SET">
                 {
                     oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.${field.genericTypes[0].type.getName()}, struct.${field.name}.size()));
-                    for (${field.genericTypes[0].fullClassName} _iter11 : struct.${field.name})
+                    for (${field.genericTypes[0].fullClassName} val : struct.${field.name})
                     {
-                        oprot.write${field.genericTypes[0].type.getName()?lower_case?cap_first}(_iter11);
+                        oprot.write${field.genericTypes[0].type.getName()?lower_case?cap_first}(val);
                     }
                     oprot.writeSetEnd();
                 }
                 <#elseif field.type.getName() == "LIST">
                 {
                     oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.${field.genericTypes[0].type.getName()}, struct.${field.name}.size()));
-                    for (${field.genericTypes[0].fullClassName} _iter10 : struct.${field.name})
+                    for (${field.genericTypes[0].fullClassName} val : struct.${field.name})
                     {
-                        oprot.write${field.genericTypes[0].type.getName()?lower_case?cap_first}(_iter10);
+                        oprot.write${field.genericTypes[0].type.getName()?lower_case?cap_first}(val);
                     }
                     oprot.writeListEnd();
                 }
                 <#elseif field.type.getName() == "MAP">
                 {
                     oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.${field.genericTypes[0].type.getName()}, org.apache.thrift.protocol.TType.${field.genericTypes[1].type.getName()}, struct.${field.name}.size()));
-                    for (java.util.Map.Entry<${field.genericTypes[0].fullClassName}, ${field.genericTypes[1].fullClassName}> _iter12 : struct.${field.name}.entrySet())
+                    for (java.util.Map.Entry<${field.genericTypes[0].fullClassName}, ${field.genericTypes[1].fullClassName}> entry : struct.${field.name}.entrySet())
                     {
-                        oprot.write${field.genericTypes[0].type.getName()?lower_case?cap_first}(_iter12.getKey());
-                        oprot.write${field.genericTypes[1].type.getName()?lower_case?cap_first}(_iter12.getValue());
+                        oprot.write${field.genericTypes[0].type.getName()?lower_case?cap_first}(entry.getKey());
+                        oprot.write${field.genericTypes[1].type.getName()?lower_case?cap_first}(entry.getValue());
                     }
                     oprot.writeMapEnd();
                 }
