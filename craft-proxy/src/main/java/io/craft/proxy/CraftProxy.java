@@ -2,6 +2,7 @@ package io.craft.proxy;
 
 
 import io.craft.core.codec.CraftFramedMessageDecoder;
+import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
@@ -54,6 +55,7 @@ public class CraftProxy implements Closeable {
                             logger.info("channel id = {}", ch.id());
                             ch.pipeline().addLast(exceptionEncoder)
                                     .addLast(new CraftFramedMessageDecoder())
+                                    .addLast(new CraftFramedMessageEncoder())
                                     .addLast(new ProxyMessageHandler(discovery));
                         }
                     });
