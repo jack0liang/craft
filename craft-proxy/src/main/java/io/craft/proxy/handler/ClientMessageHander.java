@@ -1,22 +1,10 @@
 package io.craft.proxy.handler;
 
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.core.transport.TByteBuf;
-import io.craft.proxy.proxy.Proxy;
 import io.craft.proxy.proxy.ProxyClient;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TMessage;
-import org.apache.thrift.protocol.TProtocol;
-import org.springframework.util.Assert;
-
-import java.util.Map;
-
-import static io.craft.core.constant.Constants.*;
 
 @Deprecated
 @Slf4j
