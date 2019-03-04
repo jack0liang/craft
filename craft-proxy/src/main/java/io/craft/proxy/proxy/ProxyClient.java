@@ -63,7 +63,7 @@ public class ProxyClient extends BaseCraftClient {
 
             channel.writeAndFlush(message);
 
-            logger.debug("client seq={}, server seq={}, request success", header.seqid, serverRespHead.seqid);
+            logger.debug("client seq={}, server seq={}, request success,{}", header.seqid, serverRespHead.seqid,channel);
         }
     }
 
