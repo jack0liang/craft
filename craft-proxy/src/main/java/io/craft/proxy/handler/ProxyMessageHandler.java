@@ -1,7 +1,7 @@
 package io.craft.proxy.handler;
 
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.core.transport.TByteBuf;
+import io.craft.core.message.TByteBufProtocol;
 import io.craft.proxy.discovery.EtcdServiceDiscovery;
 import io.craft.proxy.pool.ChannelPoolManager;
 import io.netty.buffer.ByteBuf;
@@ -49,7 +49,7 @@ public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramed
     protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
         ByteBuf buffer = message.getBuffer();
         buffer.markReaderIndex();
-        TByteBuf tin = new TByteBuf(buffer);
+        TByteBufProtocol tin = new TByteBufProtocol(buffer);
         TProtocol pin = new TBinaryProtocol(tin);
         //读消息开始
         TMessage msg = pin.readMessageBegin();

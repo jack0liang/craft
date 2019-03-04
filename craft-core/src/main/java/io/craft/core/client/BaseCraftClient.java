@@ -3,14 +3,13 @@ package io.craft.core.client;
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.core.transport.TByteBuf;
+import io.craft.core.message.TByteBufProtocol;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
-import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TMessage;
@@ -214,13 +213,10 @@ public class BaseCraftClient {
         protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
             message.retain();
 
-            ByteBuf buffer = message.getBuffer();
-            buffer.markReaderIndex();
-            TTransport tin = new TByteBuf(buffer);
-            TProtocol pin = new TBinaryProtocol(tin);
-            TMessage msg = pin.readMessageBegin();
+            message.markReaderIndex();
+            TMessage msg = message.readMessageBegin();
             logger.debug("seq={}, received response", msg.seqid);
-            buffer.resetReaderIndex();
+            message.resetReaderIndex();
 
             processReceived(msg.seqid, message, null);
         }

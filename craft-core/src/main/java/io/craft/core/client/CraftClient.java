@@ -2,7 +2,7 @@ package io.craft.core.client;
 
 import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.core.transport.TByteBuf;
+import io.craft.core.message.TByteBufProtocol;
 import io.craft.core.util.PropertyUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -74,19 +74,16 @@ public class CraftClient extends BaseCraftClient {
             throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "response is null");
         }
 
-        TTransport tin = new TByteBuf(message.getBuffer());
-        TProtocol pin = new TBinaryProtocol(tin);
-
-        TMessage msg = pin.readMessageBegin();
+        TMessage msg = message.readMessageBegin();
         if (msg.type == TMessageType.EXCEPTION) {
             TApplicationException x = new TApplicationException();
-            x.read(pin);
-            pin.readMessageEnd();
+            x.read(message);
+            message.readMessageEnd();
             throw x;
         }
 
-        result.read(pin);
-        pin.readMessageEnd();
+        result.read(message);
+        message.readMessageEnd();
     }
 
     private static class ClientMessageProducer implements MessageProducer {
@@ -117,15 +114,11 @@ public class CraftClient extends BaseCraftClient {
 
         @Override
         public CraftFramedMessage produce(Channel channel) throws TException {
-            ByteBuf buffer = channel.alloc().directBuffer(Constants.DEFAULT_BYTEBUF_SIZE);
-            TByteBuf tout = new TByteBuf(buffer);
-            TProtocol pout = new TBinaryProtocol(tout);
-
-            pout.writeMessageBegin(new TMessage(methodName, type, messageId));
-            args.write(pout);
-            pout.writeMessageEnd();
-
-            return new CraftFramedMessage(buffer);
+            CraftFramedMessage message = new CraftFramedMessage(channel);
+            message.writeMessageBegin(new TMessage(methodName, type, messageId));
+            args.write(message);
+            message.writeMessageEnd();
+            return message;
         }
     }
 }

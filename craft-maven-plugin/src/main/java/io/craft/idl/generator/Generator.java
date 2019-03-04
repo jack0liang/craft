@@ -2,7 +2,6 @@ package io.craft.idl.generator;
 
 import com.google.common.collect.Lists;
 import io.craft.core.annotation.*;
-import io.craft.core.exception.CraftException;
 import io.craft.idl.constant.ClassType;
 import io.craft.idl.meta.MetaClass;
 import io.craft.idl.meta.MetaMethod;

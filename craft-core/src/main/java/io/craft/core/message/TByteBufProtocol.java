@@ -1,15 +1,15 @@
-package io.craft.core.transport;
+package io.craft.core.message;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-public class TByteBuf extends TTransport {
+public class TByteBufProtocol extends TTransport {
 
     private final ByteBuf buffer;
 
-    public TByteBuf(ByteBuf buffer) {
+    public TByteBufProtocol(ByteBuf buffer) {
         this.buffer = buffer;
     }
 

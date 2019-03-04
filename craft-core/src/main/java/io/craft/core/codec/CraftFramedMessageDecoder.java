@@ -2,14 +2,9 @@ package io.craft.core.codec;
 
 import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.core.transport.TByteBuf;
-import io.craft.core.util.TraceUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TMap;
-import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,8 +77,8 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
                     //如果当前的缓冲区可读取字节小于int占用长度，此次无法读取帧大小，直接放弃
                     break;
                 }
-                //读取帧大小
-                int frameLength = readBuffer.readInt();
+                //获取帧大小, 不移动readerIndex指针
+                int frameLength = readBuffer.getInt(0);
 
                 if (frameLength < 0) {
                     throw new TTransportException(TTransportException.CORRUPTED_DATA, "Read a negative frame size (" + frameLength + ")!");
@@ -102,10 +97,10 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
             if (readBuffer.readableBytes() >= frameLength) {
                 //当前帧数据读取完成
                 try {
-                    ByteBuf buffer = ctx.alloc().directBuffer(frameLength);
+                    ByteBuf buffer = ctx.alloc().directBuffer(frameLength + 4);
                     readBuffer.readBytes(buffer);
 
-                    out.add(new CraftFramedMessage(buffer, requestTime, 500));
+                    out.add(new CraftFramedMessage(buffer, requestTime));
                     //每次请求消息读取完后就丢弃已读byte
                     readBuffer.discardReadBytes();
 
