@@ -1,7 +1,7 @@
 package io.craft.proxy.proxy;
 
 import io.craft.core.client.BaseCraftClient;
-import io.craft.core.exception.CraftException;
+import io.craft.core.exception.CraftMessageException;
 import io.craft.core.message.CraftFramedMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -32,7 +32,7 @@ public class ProxyClient extends BaseCraftClient {
 
     public void response(Channel channel, TMessage header, Future<CraftFramedMessage> future) throws TException {
         if (!future.isSuccess()) {
-            channel.writeAndFlush(new CraftException(header.seqid));
+            channel.writeAndFlush(new CraftMessageException(header.seqid));
         } else {
             //服务端返回的消息
             CraftFramedMessage response = future.getNow();
@@ -68,7 +68,7 @@ public class ProxyClient extends BaseCraftClient {
 
         @Override
         public CraftFramedMessage produce(Channel channel) throws TException {
-            message.setMessageSequence(header.seqid);
+            message.setMessageSequence(messageId);
             return message;
         }
     }

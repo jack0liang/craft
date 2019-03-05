@@ -31,4 +31,6 @@ public class Constants {
 
     public final static short HEADER_SEQUENCE = (short) (Short.MIN_VALUE + 2);
 
+    public final static int FRAME_SIZE_BYTE_LENGTH = 4;
+
 }

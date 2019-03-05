@@ -1,17 +1,18 @@
 package io.craft.core.message;
 
-import static io.craft.core.constant.Constants.*;
-
-import io.craft.core.constant.Constants;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.util.ReferenceCounted;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.*;
+import org.apache.thrift.transport.TTransport;
 import org.springframework.util.Assert;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static io.craft.core.constant.Constants.*;
 
 /**
  * Thread Unsafe
@@ -49,7 +50,7 @@ public class CraftFramedMessage extends TBinaryProtocol implements ReferenceCoun
     }
 
     public CraftFramedMessage(ByteBuf buffer, long requestTime, long stringLengthLimit, long containerLengthLimit, boolean strictRead, boolean strictWrite) {
-        super(new TByteBufProtocol(buffer), stringLengthLimit, containerLengthLimit, strictRead, strictWrite);
+        super(new TByteBufTransport(buffer), stringLengthLimit, containerLengthLimit, strictRead, strictWrite);
         this.requestTime = requestTime;
         this.buffer = buffer;
     }
@@ -85,8 +86,7 @@ public class CraftFramedMessage extends TBinaryProtocol implements ReferenceCoun
     }
 
     private void initMessageHeader() throws TException {
-        //跳过帧头的int(4字节)
-        buffer.readerIndex(4);
+        buffer.readerIndex(0);
         messageHeader = readMessageBegin();
     }
 
@@ -158,6 +158,7 @@ public class CraftFramedMessage extends TBinaryProtocol implements ReferenceCoun
                 default :
                     TProtocolUtil.skip(this, field.type);
             }
+            readFieldEnd();
         }
 
         buffer.resetReaderIndex();
@@ -170,64 +171,65 @@ public class CraftFramedMessage extends TBinaryProtocol implements ReferenceCoun
     }
 
     public void setMessageSequence(int sequence) throws TException {
-        TMessage head = getMessageHeader();
+        buffer.markReaderIndex();
+        //读头
+        initMessageHeader();
+        //messageId所在位置为message header的尾部4个字节
+        buffer.setInt(buffer.readerIndex() - FRAME_SIZE_BYTE_LENGTH, sequence);
+        buffer.resetReaderIndex();
+    }
 
+    public void markReaderIndex() {
+        buffer.markReaderIndex();
+    }
+
+    public void resetReaderIndex() {
+        buffer.resetReaderIndex();
+    }
+
+    public void markWriterIndex() {
         buffer.markWriterIndex();
-        //跳过帧头的int(4字节)
-        buffer.writerIndex(4);
-        //消息序号是固定4字节的I32, 修改他是安全的操作
-        TMessage writeHead = new TMessage(head.name, head.type, sequence);
-        writeMessageBegin(writeHead);
+    }
+
+    public void resetWriterIndex() {
         buffer.resetWriterIndex();
-    }
-
-    public ByteBuf markReaderIndex() {
-        return buffer.markReaderIndex();
-    }
-
-    public ByteBuf resetReaderIndex() {
-        return buffer.resetReaderIndex();
-    }
-
-    public ByteBuf markWriterIndex() {
-        return buffer.markWriterIndex();
-    }
-
-    public ByteBuf resetWriterIndex() {
-        return buffer.resetWriterIndex();
     }
 
     public int readerIndex() {
         return buffer.readerIndex();
     }
 
-    public ByteBuf readerIndex(int readerIndex) {
-        return buffer.readerIndex(readerIndex);
+    public void readerIndex(int readerIndex) {
+        buffer.readerIndex(readerIndex);
     }
 
     public int writerIndex() {
         return buffer.writerIndex();
     }
 
-    public ByteBuf writerIndex(int readerIndex) {
-        return buffer.writerIndex(readerIndex);
+    public void writerIndex(int readerIndex) {
+        buffer.writerIndex(readerIndex);
     }
 
-    public void readBytes(ByteBuf buf) {
-        buf.readBytes(buffer);
+    public void readBytes(ByteBuf dst) {
+        buffer.readBytes(dst);
+    }
+
+    public int readableBytes() {
+        return buffer.readableBytes();
     }
 
     @Override
     public TMessage readMessageBegin() throws TException {
         //跳过帧头
-        readI32();
+        TProtocolUtil.skip(this, TType.I32);
         return super.readMessageBegin();
     }
 
 
     @Override
     public void writeMessageBegin(TMessage message) throws TException {
-        buffer.writeInt(0);
+        writeI32(0);
         super.writeMessageBegin(message);
     }
 
@@ -235,7 +237,7 @@ public class CraftFramedMessage extends TBinaryProtocol implements ReferenceCoun
     public void writeMessageEnd() {
         super.writeMessageEnd();
         //将帧大小写入到buffer的头部
-        buffer.setInt(0, buffer.readableBytes());
+        buffer.setInt(0, buffer.readableBytes() - FRAME_SIZE_BYTE_LENGTH);
     }
 
     @Override

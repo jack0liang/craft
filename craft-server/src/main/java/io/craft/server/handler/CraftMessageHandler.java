@@ -31,9 +31,4 @@ public class CraftMessageHandler extends SimpleChannelInboundHandler<CraftFramed
         executor.submit(new CraftBusinessTask(ctx, processor, message));
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
-        ctx.write(cause);
-    }
 }

@@ -3,18 +3,13 @@ package io.craft.core.client;
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.core.message.TByteBufProtocol;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
 import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TMessage;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +65,7 @@ public class BaseCraftClient {
     }
 
     protected Future<CraftFramedMessage> write(MessageProducer producer) throws TException {
+
         //生成消息序号
         int messageId = sequence.getAndIncrement();
         //生成future
@@ -155,8 +151,9 @@ public class BaseCraftClient {
     }
 
     private void doWrite(MessageProducer producer) throws TException {
-        logger.debug("do write message messageId={}", producer.getMessageId());
-        ChannelFuture future = channel.writeAndFlush(producer.produce(channel));
+        CraftFramedMessage message = producer.produce(channel);
+        logger.debug("do write message messageId={}, readerIndex={}, readableBytes={}", producer.getMessageId(), message.readerIndex(), message.readableBytes());
+        ChannelFuture future = channel.writeAndFlush(message);
         if (future.isDone()) {
             processWrited(future, producer.getMessageId());
         } else {
@@ -212,12 +209,10 @@ public class BaseCraftClient {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
             message.retain();
-
             message.markReaderIndex();
             TMessage msg = message.readMessageBegin();
             logger.debug("seq={}, received response", msg.seqid);
             message.resetReaderIndex();
-
             processReceived(msg.seqid, message, null);
         }
     }

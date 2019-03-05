@@ -90,7 +90,7 @@ public class CraftServer implements Closeable {
 
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            logger.debug("channel id = {}", ch.id());
+                            //logger.debug("channel id = {}", ch.id());
                             ch.pipeline()
                                     .addLast(new CraftFramedMessageDecoder())
                                     .addLast(craftFramedMessageEncoder)

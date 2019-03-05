@@ -1,7 +1,6 @@
 package io.craft.core.codec;
 
-import io.craft.core.constant.Constants;
-import io.craft.core.exception.CraftException;
+import io.craft.core.exception.CraftMessageException;
 import io.craft.core.message.CraftFramedMessage;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -12,10 +11,10 @@ import org.apache.thrift.protocol.TMessageType;
 import java.util.List;
 
 @ChannelHandler.Sharable
-public class CraftThrowableEncoder extends MessageToMessageEncoder<CraftException> {
+public class CraftThrowableEncoder extends MessageToMessageEncoder<CraftMessageException> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, CraftException cause, List<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, CraftMessageException cause, List<Object> out) throws Exception {
         CraftFramedMessage message = new CraftFramedMessage(ctx.channel());
 
         message.writeMessageBegin(new TMessage("exception", TMessageType.EXCEPTION, cause.getMessageId()));

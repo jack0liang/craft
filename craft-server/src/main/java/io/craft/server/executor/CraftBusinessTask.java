@@ -1,20 +1,13 @@
 package io.craft.server.executor;
 
-import io.craft.core.constant.Constants;
-import io.craft.core.exception.CraftException;
+import io.craft.core.exception.CraftMessageException;
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.core.message.TByteBufProtocol;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
-import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TMessage;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TTransport;
 
 @Slf4j
 public class CraftBusinessTask implements Runnable {
@@ -53,7 +46,7 @@ public class CraftBusinessTask implements Runnable {
         CraftFramedMessage response = new CraftFramedMessage(context.channel());
 
         try {
-            logger.debug("request={}, refCnt={} process", request, request.refCnt());
+            //logger.debug("request={}, refCnt={} process", request, request.refCnt());
 
             processor.process(request, response);
 
@@ -64,7 +57,9 @@ public class CraftBusinessTask implements Runnable {
                 }
             } else {
                 future.addListener(f -> {
-                    logger.error("write response failed, error={}", f.cause().getMessage(), f.cause());
+                    if (!f.isSuccess()) {
+                        logger.error("write response failed, error={}", f.cause().getMessage(), f.cause());
+                    }
                 });
             }
 
@@ -74,7 +69,7 @@ public class CraftBusinessTask implements Runnable {
             try {
                 logger.error("process error={}", e.getMessage(), e);
                 header = request.getMessageHeader();
-                context.writeAndFlush(new CraftException(header.seqid));
+                context.writeAndFlush(new CraftMessageException(header.seqid));
             } catch (TException te) {
                 //获取不到messageId, 则强制将连接关闭
                 logger.error("get messageId error, error={}", te.getMessage(), te);

@@ -11,6 +11,7 @@ public class CraftFramedMessageEncoder extends MessageToByteEncoder<CraftFramedM
 
     @Override
     protected void encode(ChannelHandlerContext ctx, CraftFramedMessage message, ByteBuf out) throws Exception {
+        out.capacity(message.readableBytes());
         message.readBytes(out);
     }
 }

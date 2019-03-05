@@ -5,11 +5,11 @@ import io.netty.buffer.Unpooled;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-public class TByteBufProtocol extends TTransport {
+public class TByteBufTransport extends TTransport {
 
     private final ByteBuf buffer;
 
-    public TByteBufProtocol(ByteBuf buffer) {
+    public TByteBufTransport(ByteBuf buffer) {
         this.buffer = buffer;
     }
 

@@ -70,19 +70,6 @@ public abstract class Generator {
             returnValue.setRequired(returnValueRequired != null && returnValueRequired.value());
             returnValue.setFields(Lists.newArrayList());
 
-            MetaClass returnException = MetaClass.builder()
-                    .className("CraftException")
-                    .fullClassName("io.craft.core.exception.CraftException")
-                    .name("exception")
-                    .type(ClassType.STRUCT)
-                    .deprecated(false)
-                    .required(false)
-                    .sequence((short) 1)
-                    .build();
-
-
-
-
             //处理参数
             Set<Integer> idSet = new HashSet<>();
             List<MetaClass> metaParameters = new ArrayList<>();
@@ -151,9 +138,6 @@ public abstract class Generator {
             if (!ClassType.VOID.equals(returnValue.getType())) {
                 methodRet.getFields().add(returnValue);
             }
-
-            methodRet.getFields().add(returnException);
-
             serviceFields.add(methodArgs);
             serviceFields.add(methodRet);
         }
