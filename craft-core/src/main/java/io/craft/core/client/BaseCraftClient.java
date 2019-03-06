@@ -150,6 +150,24 @@ public class BaseCraftClient {
         }
     }
 
+    private void processReceiveFailed(Throwable cause) throws TException {
+        //通知所有等待的线程
+        Integer[] messageIds;
+        //此处需要加一小段锁,不允许write再写入内容,避免发出错误的通知
+        synchronized (promiseMap) {
+            messageIds = new Integer[promiseMap.size()];
+            messageIds = promiseMap.keySet().toArray(messageIds);
+        }
+
+        if (messageIds.length > 0) {
+            logger.error("connection error={}, cause {} prmoise not done", cause.getMessage(), messageIds.length, cause);
+        }
+
+        for(Integer messageId : messageIds) {
+            processReceived(messageId, null, cause);
+        }
+    }
+
     private void doWrite(MessageProducer producer) throws TException {
         CraftFramedMessage message = producer.produce(channel);
         logger.debug("do write message messageId={}, readerIndex={}, readableBytes={}", producer.getMessageId(), message.readerIndex(), message.readableBytes());
@@ -190,29 +208,22 @@ public class BaseCraftClient {
         }
 
         @Override
+        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            processReceiveFailed(new Exception("connection closed"));
+        }
+
+        @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
             //读取发生异常, 关闭连接, 等待下一次重连
             close();
-            logger.error("socket read error, error={}", cause.getMessage(), cause);
-            //通知所有等待的线程
-            Integer[] messageIds;
-            //此处需要加一小段锁,不允许write再写入内容,避免发出错误的通知
-            synchronized (promiseMap) {
-                messageIds = new Integer[promiseMap.size()];
-                messageIds = promiseMap.keySet().toArray(messageIds);
-            }
-            for(Integer messageId : messageIds) {
-                processReceived(messageId, null, cause);
-            }
+            processReceiveFailed(cause);
         }
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
             message.retain();
-            message.markReaderIndex();
-            TMessage msg = message.readMessageBegin();
-            logger.debug("seq={}, received response", msg.seqid);
-            message.resetReaderIndex();
+            TMessage msg = message.getMessageHeader();
+            logger.debug("seq={}, received response, refCnt={}", msg.seqid, message.refCnt());
             processReceived(msg.seqid, message, null);
         }
     }

@@ -19,20 +19,32 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TProcessor;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.FileSystemXmlApplicationContext;
 import sun.misc.Signal;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
-public class CraftServer implements Closeable {
+public class CraftServer {
+
+    private static final String SERVICE_AUTOCONFIG_TEST = "service-test.xml";
+
+    private static final String SERVICE_AUTOCONFIG = "service.xml";
 
     private ConfigurableApplicationContext applicationContext;
+
+    private String host;
+
+    private Integer port;
 
     private Channel channel;
 
@@ -46,97 +58,124 @@ public class CraftServer implements Closeable {
 
     private PropertyManager propertyManager;
 
-    private void serve() throws Throwable {
+    private AtomicBoolean isStarted = new AtomicBoolean(false);
 
-        applicationContext = new ClassPathXmlApplicationContext("service.xml");
-
-        propertyManager = applicationContext.getBean(PropertyManager.class);
-
-        String ip;
-
-        try {
-            ip = IPUtil.getLocalIPV4();
-        } catch (UnknownHostException e) {
-            throw new RuntimeException("get ip failed, error=" + e.getMessage(), e);
+    private URL findURLOfDefaultConfigurationFile() {
+        URL url;
+        url = getResource(SERVICE_AUTOCONFIG_TEST);
+        if (url != null) {
+            return url;
         }
 
-        //ip = "127.0.0.1";
+        return getResource(SERVICE_AUTOCONFIG);
+    }
 
-        int port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
+    private URL getResource(String filename) {
+        ClassLoader loader = this.getClass().getClassLoader();
+        return loader.getResource(filename);
+    }
 
+    /**
+     * 创建spring context
+     */
+    private void createApplicationContext() throws Exception {
+        URL configLocation = findURLOfDefaultConfigurationFile();
+        if (configLocation == null) {
+            throw new Exception("xml config not found");
+        }
+        applicationContext = new ClassPathXmlApplicationContext("service.xml");
+        isStarted.set(true);
+        propertyManager = applicationContext.getBean(PropertyManager.class);
+        if (propertyManager == null) {
+            throw new Exception("property manager init failed");
+        }
+        logger.info("start 1/3 create spring container done");
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            @Override
+            public void run() {
+                try {
+                    close();
+                } catch (Exception e) {
+                    logger.error("server close error={}", e.getMessage(), e);
+                }
+            }
+        });
+    }
+
+    /**
+     * 监听端口
+     */
+    private void listen() throws Exception {
+        host = IPUtil.getLocalIPV4();
+        port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
         TProcessor processor = applicationContext.getBean(TProcessor.class);
-
         CraftFramedMessageEncoder craftFramedMessageEncoder = new CraftFramedMessageEncoder();
-
         CraftThrowableEncoder exceptionEncoder = new CraftThrowableEncoder();
-
         ServerBootstrap bootstrap = new ServerBootstrap();
-
         businessExecutor = new CraftBusinessExecutor(100, 20000, new CraftRejectedExecutionHandler());
-
         bossGroup = new NioEventLoopGroup(10, new CraftThreadFactory("craft-boss-"));
-
         workerGroup = new NioEventLoopGroup(10, new CraftThreadFactory("craft-worker-"));
-
         CraftMessageHandler craftMessageHandler = new CraftMessageHandler(processor, businessExecutor);
 
+        bootstrap.group(bossGroup, workerGroup)
+                .channel(NioServerSocketChannel.class)
+                .localAddress(new InetSocketAddress(host, port))
+                .option(ChannelOption.SO_BACKLOG, 1024)
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+
+                    @Override
+                    protected void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline()
+                                .addLast(new CraftFramedMessageDecoder())
+                                .addLast(craftFramedMessageEncoder)
+                                .addLast(exceptionEncoder)
+                                .addLast(craftMessageHandler)
+                        ;
+                    }
+                });
+
+        channel = bootstrap.bind().sync().channel();
+        logger.info("start 2/3 listen port done");
+    }
+
+    /**
+     * 服务注册到注册中心
+     */
+    private void register() throws Exception {
+        registry = applicationContext.getBean(ServiceRegistry.class);
+        registry.register();
+        logger.info("start 3/3 register service done");
+        channel.closeFuture().sync();
+    }
+
+    private void serve() throws Throwable {
         try {
-
-            bootstrap.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .localAddress(new InetSocketAddress(port))
-                    .option(ChannelOption.SO_BACKLOG, 1024)
-                    .childHandler(new ChannelInitializer<SocketChannel>() {
-
-                        @Override
-                        protected void initChannel(SocketChannel ch) throws Exception {
-                            //logger.debug("channel id = {}", ch.id());
-                            ch.pipeline()
-                                    .addLast(new CraftFramedMessageDecoder())
-                                    .addLast(craftFramedMessageEncoder)
-                                    .addLast(exceptionEncoder)
-                                    .addLast(craftMessageHandler)
-                            ;
-                        }
-                    });
-            ChannelFuture f = bootstrap.bind().sync();
-            //端口监听成功
-            logger.debug("server start success on {}:{}", ip, port);
-
-            registry = applicationContext.getBean(ServiceRegistry.class);
-
-            registry.register();
-            logger.debug("service register success");
-
-            CraftTermHandler termHandler = new CraftTermHandler(this);
-
-            Signal.handle(new Signal("TERM"), termHandler);
-            Signal.handle(new Signal("INT"), termHandler);
-            logger.debug("signal handler succsss");
-
-            channel = f.channel();
-
-            channel.closeFuture().sync();
+            createApplicationContext();
+            listen();
+            register();
         } finally {
             close();
         }
     }
 
-    @Override
-    public synchronized void close() throws IOException {
+    public synchronized void close() throws Exception {
+        if (!isStarted.get()) {
+            return;
+        }
         //先反注册服务
         try {
             if (registry != null) {
                 registry.close();
                 registry = null;
-                logger.debug("unregister service successful");
             }
+            logger.info("close 1/7 unregister service done");
         } catch (Exception e) {
             throw new IOException(e.getMessage(), e);
         }
         //等待1s, 避免有些还没感知到服务下线
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(10);
+            logger.info("close 2/7 wait unregister sync done");
         } catch (InterruptedException e) {
             throw new IOException(e.getMessage(), e);
         }
@@ -145,8 +184,8 @@ public class CraftServer implements Closeable {
             if (channel != null) {
                 channel.close().sync();
                 channel = null;
-                logger.debug("channel close successful");
             }
+            logger.info("close 3/7 close port done");
         } catch (InterruptedException e) {
             throw new IOException(e.getMessage(), e);
         }
@@ -155,8 +194,8 @@ public class CraftServer implements Closeable {
             if (bossGroup != null) {
                 bossGroup.shutdownGracefully().sync();
                 bossGroup = null;
-                logger.debug("boss group close successful");
             }
+            logger.info("close 4/7 boss shutdown done");
         } catch (InterruptedException e) {
             throw new IOException(e.getMessage(), e);
         }
@@ -165,8 +204,8 @@ public class CraftServer implements Closeable {
             if (workerGroup != null) {
                 workerGroup.shutdownGracefully().sync();
                 workerGroup = null;
-                logger.debug("worker group close successful");
             }
+            logger.info("close 5/7 worker shutdown done");
         } catch (InterruptedException e) {
             throw new IOException(e.getMessage(), e);
         }
@@ -175,8 +214,8 @@ public class CraftServer implements Closeable {
             if (businessExecutor != null) {
                 businessExecutor.shutdown();
                 businessExecutor = null;
-                logger.debug("business thread pool close successful");
             }
+            logger.info("close 6/7 business shutdown done");
         } catch (Exception e) {
             throw new IOException(e.getMessage(), e);
         }
@@ -184,8 +223,9 @@ public class CraftServer implements Closeable {
         if (applicationContext != null) {
             applicationContext.close();
             applicationContext = null;
-            logger.debug("spring container close successful");
         }
+        isStarted.set(false);
+        logger.info("close 7/7 spring container close done");
     }
 
     public static void main(String... args) throws Throwable {

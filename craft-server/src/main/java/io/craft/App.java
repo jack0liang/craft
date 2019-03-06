@@ -1,9 +1,13 @@
 package io.craft;
 
+import com.google.common.collect.Lists;
 import io.craft.abc.UserService;
 import io.craft.core.util.TraceUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,11 +34,19 @@ public class App {
 //        TimeUnit.SECONDS.sleep(10);
 
         App app = new App();
-        //app.request();
+//        //app.request();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        int count = 1000;
 
-        for(int i=0; i<100000; i++) {
+        int threads = 5;
+//
+        ExecutorService executorService = Executors.newFixedThreadPool(threads);
+
+        CountDownLatch cdl = new CountDownLatch(count);
+
+        long beginTime = System.currentTimeMillis();
+
+        for(int i=0; i<count; i++) {
             executorService.submit(new Runnable() {
 
                 @Override
@@ -43,12 +55,16 @@ public class App {
                         app.request();
                     } catch (Exception e) {
                         e.printStackTrace();
+                    } finally {
+                        cdl.countDown();
                     }
                 }
             });
         }
 
+        cdl.await();
 
+        logger.info("{} threads process {} request take {}ms", threads, count, (System.currentTimeMillis() - beginTime));
     }
 
     public void request() throws Exception {

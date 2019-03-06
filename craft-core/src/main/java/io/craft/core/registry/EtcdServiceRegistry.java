@@ -49,7 +49,7 @@ public class EtcdServiceRegistry implements ServiceRegistry {
     @Override
     public synchronized void register() throws Exception {
         configClient.put(path, host + ":" + port);
-        logger.debug("register success, path={}", path);
+        logger.info("register success, path={}", path);
     }
 
     @Override

@@ -56,28 +56,34 @@ public class CraftClient extends BaseCraftClient {
     }
 
     protected void receiveBase(Future<CraftFramedMessage> future, TBase<?,?> result, String methodName) throws TException {
-        CraftFramedMessage message;
+        CraftFramedMessage message = null;
         try {
-            message = future.get();
-        } catch (Throwable t) {
-            logger.error(t.getMessage(), t);
-            throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "future get error, error=" + t.getMessage());
-        }
+            try {
+                message = future.get();
+            } catch (Throwable t) {
+                logger.error(t.getMessage(), t);
+                throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "future get error, error=" + t.getMessage());
+            }
 
-        if (message == null) {
-            throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "response is null");
-        }
+            if (message == null) {
+                throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "response is null");
+            }
 
-        TMessage msg = message.readMessageBegin();
-        if (msg.type == TMessageType.EXCEPTION) {
-            TApplicationException x = new TApplicationException();
-            x.read(message);
+            TMessage msg = message.readMessageBegin();
+            if (msg.type == TMessageType.EXCEPTION) {
+                TApplicationException x = new TApplicationException();
+                x.read(message);
+                message.readMessageEnd();
+                throw x;
+            }
+
+            result.read(message);
             message.readMessageEnd();
-            throw x;
+        } finally {
+            if (message != null) {
+                message.release();
+            }
         }
-
-        result.read(message);
-        message.readMessageEnd();
     }
 
     private static class ClientMessageProducer implements MessageProducer {

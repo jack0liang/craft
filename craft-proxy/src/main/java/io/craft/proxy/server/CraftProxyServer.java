@@ -20,7 +20,7 @@ import java.io.IOException;
 
 public class CraftProxyServer implements Closeable {
 
-    private EventLoopGroup executors = new NioEventLoopGroup(5);
+    private EventLoopGroup executors = new NioEventLoopGroup(1);
 
     private ProxyClient proxyClient = new ProxyClient(
             new Bootstrap()

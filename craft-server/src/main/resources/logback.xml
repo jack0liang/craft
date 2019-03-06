@@ -28,7 +28,7 @@
     <logger name="io.craft.core.config.EtcdClient" level="INFO" />
 
     <!-- Logger 根目录 -->
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
