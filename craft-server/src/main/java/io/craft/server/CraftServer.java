@@ -58,8 +58,6 @@ public class CraftServer {
 
     private PropertyManager propertyManager;
 
-    private AtomicBoolean isStarted = new AtomicBoolean(false);
-
     private URL findURLOfDefaultConfigurationFile() {
         URL url;
         url = getResource(SERVICE_AUTOCONFIG_TEST);
@@ -84,22 +82,11 @@ public class CraftServer {
             throw new Exception("xml config not found");
         }
         applicationContext = new ClassPathXmlApplicationContext("service.xml");
-        isStarted.set(true);
         propertyManager = applicationContext.getBean(PropertyManager.class);
         if (propertyManager == null) {
             throw new Exception("property manager init failed");
         }
         logger.info("start 1/3 create spring container done");
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            @Override
-            public void run() {
-                try {
-                    close();
-                } catch (Exception e) {
-                    logger.error("server close error={}", e.getMessage(), e);
-                }
-            }
-        });
     }
 
     /**
@@ -149,6 +136,14 @@ public class CraftServer {
     }
 
     private void serve() throws Throwable {
+        //注册钩子,在服务关闭的时候关闭容器
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                close();
+            } catch (Exception e) {
+                logger.error("server close error={}", e.getMessage(), e);
+            }
+        }));
         try {
             createApplicationContext();
             listen();
@@ -159,9 +154,6 @@ public class CraftServer {
     }
 
     public synchronized void close() throws Exception {
-        if (!isStarted.get()) {
-            return;
-        }
         //先反注册服务
         try {
             if (registry != null) {
@@ -224,7 +216,6 @@ public class CraftServer {
             applicationContext.close();
             applicationContext = null;
         }
-        isStarted.set(false);
         logger.info("close 7/7 spring container close done");
     }
 
