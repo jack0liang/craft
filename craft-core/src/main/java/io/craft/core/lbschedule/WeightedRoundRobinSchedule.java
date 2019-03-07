@@ -13,23 +13,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-public class WeightedRoundRobinSchedule<E extends WeightedNode> implements LBSchedule<E, Object> {
+public class WeightedRoundRobinSchedule<E extends WeightedNode> extends RoundRobinSchedule<E> {
 
     private static final Logger logger = LoggerFactory.getLogger(WeightedRoundRobinSchedule.class);
 
-    private volatile E[] nodes;
-
-    private AtomicInteger current;
-
     public WeightedRoundRobinSchedule(E[] nodes) {
-        this.current = new AtomicInteger(0);
-        set(nodes);
-    }
-
-    @Override
-    public E get() {
-        int pos = current.getAndIncrement() % nodes.length;
-        return nodes[pos];
+        super(nodes);
     }
 
     @Override
@@ -53,7 +42,7 @@ public class WeightedRoundRobinSchedule<E extends WeightedNode> implements LBSch
             Arrays.fill(vnodes, offset, offset + weight, e);
             offset += weight;
         }
-        this.nodes = vnodes;
+        super.set(nodes);
     }
 
 }

@@ -1,6 +1,5 @@
 package io.craft.core.lbschedule;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RoundRobinSchedule<E> implements LBSchedule<E, Object> {
@@ -21,7 +20,17 @@ public class RoundRobinSchedule<E> implements LBSchedule<E, Object> {
 
     @Override
     public E get() {
-        int pos = current.getAndIncrement() % nodes.length;
-        return nodes[pos];
+        E[] vnodes = nodes;
+        int pos = current.getAndUpdate(prev -> {
+            int next = prev++;
+            if (next >= vnodes.length) {
+                return 0;
+            } else {
+                return next;
+            }
+        });
+        return vnodes[pos];
     }
+
+
 }
