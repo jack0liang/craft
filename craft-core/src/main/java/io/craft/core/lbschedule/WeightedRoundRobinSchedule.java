@@ -11,12 +11,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 public class WeightedRoundRobinSchedule<E extends WeightedNode> implements LBSchedule<E, Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(WeightedRoundRobinSchedule.class);
 
-    private E[] nodes;
+    private volatile E[] nodes;
 
     private AtomicInteger current;
 

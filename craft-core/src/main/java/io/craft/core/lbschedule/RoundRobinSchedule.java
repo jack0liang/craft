@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RoundRobinSchedule<E> implements LBSchedule<E, Object> {
 
-    private E[] nodes;
+    private volatile E[] nodes;
 
     private AtomicInteger current;
 

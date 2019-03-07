@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class HashSchedule<E> implements LBSchedule<E, Hashing> {
 
-    private E[] nodes;
+    private volatile E[] nodes;
 
     private RoundRobinSchedule<E> optional;
 
