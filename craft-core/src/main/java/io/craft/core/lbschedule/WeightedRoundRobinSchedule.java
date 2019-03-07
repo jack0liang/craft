@@ -42,16 +42,17 @@ public class WeightedRoundRobinSchedule<E extends WeightedNode> implements LBSch
             }
             size += weight;
         }
-        this.nodes = (E[]) Array.newInstance(nodes.getClass().getComponentType(), size);
+        E[] vnodes = (E[]) Array.newInstance(nodes.getClass().getComponentType(), size);
         int offset = 0;
         for(E e : nodes) {
             int weight = e.weight();
             if (weight <= 0) {
                 continue;
             }
-            Arrays.fill(this.nodes, offset, offset + weight, e);
+            Arrays.fill(vnodes, offset, offset + weight, e);
             offset += weight;
         }
+        this.nodes = vnodes;
     }
 
 }
