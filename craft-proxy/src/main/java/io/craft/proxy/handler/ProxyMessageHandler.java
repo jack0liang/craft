@@ -1,5 +1,6 @@
 package io.craft.proxy.handler;
 
+import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
 import io.craft.proxy.discovery.EtcdServiceDiscovery;
 import io.craft.proxy.proxy.ProxyClient;
@@ -11,6 +12,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.thrift.protocol.TMessage;
 import org.springframework.util.Assert;
 
 import java.util.HashMap;
@@ -43,6 +45,7 @@ public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramed
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
+
         String serviceName = message.getServiceName();
         String traceId = message.getTraceId();
         //Map<String, String> header;

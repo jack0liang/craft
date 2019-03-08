@@ -2307,6 +2307,10 @@ public interface UserService {
 
         public static final String SERVICE_NAME = "io.craft.abc";
 
+        public Client() {
+            super(SERVICE_NAME);
+        }
+
         public io.craft.abc.model.UserModel get(java.lang.Long id) throws org.apache.thrift.TException
         {
             io.netty.util.concurrent.Future<io.craft.core.message.CraftFramedMessage> future = send_get(id);

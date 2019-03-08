@@ -1,7 +1,5 @@
 package io.craft.core.lbschedule;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class HashSchedule<E> implements LBSchedule<E, Hashing> {
 
     private volatile E[] nodes;
