@@ -1,7 +1,7 @@
 package io.craft.proxy.handler;
 
 import io.craft.core.message.CraftFramedMessage;
-import io.craft.proxy.discovery.EtcdServiceDiscovery;
+import io.craft.proxy.lbs.FindService;
 import io.craft.proxy.proxy.ProxyClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,12 +18,12 @@ import java.util.Map;
 
 @Slf4j
 public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramedMessage> {
-    private EtcdServiceDiscovery discovery;
+    private FindService findService;
     //private Map<String,PoolChannelHolder> addr2Channel = new HashMap<>();
     private static Map<String, ProxyClient> addr2serverProxy = new HashMap<>();
 
-    public ProxyMessageHandler(EtcdServiceDiscovery discovery) {
-        this.discovery = discovery;
+    public ProxyMessageHandler(FindService findService) {
+        this.findService = findService;
     }
 
 //    @Override
@@ -53,7 +53,7 @@ public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramed
         logger.debug("serviceName={}, traceId={}", serviceName, traceId);
 
         message.retain();
-        String serviceAddr = discovery.findService(serviceName);
+        String serviceAddr = findService.find(serviceName);
         ProxyClient serverProxy = getServerProxy(ctx.channel().eventLoop(), serviceAddr);
         serverProxy.write(ctx.channel(),message.getMessageHeader(),message);
 //        PoolChannelHolder holder = addr2Channel.get(serviceAddr);
