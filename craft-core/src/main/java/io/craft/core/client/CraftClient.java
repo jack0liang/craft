@@ -1,5 +1,6 @@
 package io.craft.core.client;
 
+import io.craft.core.constant.Constants;
 import io.craft.core.message.CraftFramedMessage;
 import io.craft.core.util.PropertyUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -7,6 +8,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TBase;
@@ -33,7 +35,7 @@ public class CraftClient extends BaseCraftClient {
         PROXY_CONNECT_TIMEOUT = Integer.valueOf(PropertyUtil.getProperty("proxy.connect.timeout"));
     }
 
-    public CraftClient() {
+    public CraftClient(String serviceName) {
         super(
                 new Bootstrap()
                         .remoteAddress(PROXY_HOST, PROXY_PORT)
@@ -44,6 +46,24 @@ public class CraftClient extends BaseCraftClient {
                 ,
                 new NioEventLoopGroup(2)
         );
+        //发送服务监听消息消息(proxy专用,直接连接服务端的话,服务端会忽略此消息)
+        MessageProducer producer = new ClientInitProducer(serviceName);
+        CraftFramedMessage response = null;
+        try {
+            //同步等待注册返回
+            response = write(producer).get();
+            TMessage msg = response.readMessageBegin();
+            if (msg.type != Constants.MESSAGE_TYPE_INIT) {
+                throw new RuntimeException("proxy init failed");
+            }
+            logger.info("proxy init [{}] done", serviceName);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (response != null) {
+                response.release();
+            }
+        }
     }
 
     protected Future<CraftFramedMessage> sendBase(String methodName, TBase<?,?> args) throws TException {
@@ -83,6 +103,35 @@ public class CraftClient extends BaseCraftClient {
             if (message != null) {
                 message.release();
             }
+        }
+    }
+
+    private static class ClientInitProducer implements MessageProducer {
+
+        private String serviceName;
+
+        private int messageId;
+
+        public ClientInitProducer(String serviceName) {
+            this.serviceName = serviceName;
+        }
+
+        @Override
+        public void setMessageId(int messageId) {
+            this.messageId = messageId;
+        }
+
+        @Override
+        public int getMessageId() {
+            return this.messageId;
+        }
+
+        @Override
+        public CraftFramedMessage produce(Channel channel) throws TException {
+            CraftFramedMessage message = new CraftFramedMessage(channel);
+            message.writeMessageBegin(new TMessage(serviceName, Constants.MESSAGE_TYPE_INIT, messageId));
+            message.writeMessageEnd();
+            return message;
         }
     }
 

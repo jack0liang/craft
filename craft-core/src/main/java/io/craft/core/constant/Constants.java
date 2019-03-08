@@ -33,4 +33,6 @@ public class Constants {
 
     public final static int FRAME_SIZE_BYTE_LENGTH = 4;
 
+    public final static byte MESSAGE_TYPE_INIT = 127;
+
 }

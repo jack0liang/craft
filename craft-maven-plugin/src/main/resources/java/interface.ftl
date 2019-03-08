@@ -80,6 +80,10 @@ public interface ${className} {
 
         public static final String SERVICE_NAME = "${packageName}";
 
+        public ${className}() {
+            super(SERVICE_NAME);
+        }
+
         <#list methods as method>
         public ${method.returnValue.fullClassName} ${method.name}(<#list method.parameters as parameter>${parameter.fullClassName} ${parameter.name}<#sep>, </#sep></#list>) throws org.apache.thrift.TException
         {
