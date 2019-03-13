@@ -23,12 +23,12 @@ public class TraceUtil {
     }
 
     public static Map<String, String> getCookie() {
-        Map<String, String> head = cookie.get();
-        if (head == null) {
-            head = new HashMap<>(0);
-            cookie.set(head);
+        Map<String, String> cookies = cookie.get();
+        if (cookies == null) {
+            cookies = new HashMap<>(0);
+            cookie.set(cookies);
         }
-        return head;
+        return cookies;
     }
 
     public static void setCookie(Map<String, String> head) {
@@ -40,6 +40,10 @@ public class TraceUtil {
 
     public static void addCookie(String name, String value) {
         getCookie().put(name, value);
+    }
+
+    public static String getCookie(String name) {
+        return getCookie().get(name);
     }
 
     public static void removeCookie(String name) {

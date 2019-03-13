@@ -1,18 +1,12 @@
 package io.craft.core.lbschedule;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+@SuppressWarnings({"unchecked"})
 public class WeightedRoundRobinSchedule<E extends WeightedNode> extends RoundRobinSchedule<E> {
 
     private static final Logger logger = LoggerFactory.getLogger(WeightedRoundRobinSchedule.class);

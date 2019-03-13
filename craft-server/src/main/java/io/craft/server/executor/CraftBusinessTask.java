@@ -46,9 +46,9 @@ public class CraftBusinessTask implements Runnable {
         CraftMessage response = new CraftMessage(context.channel());
 
         try {
-            //logger.debug("request={}, refCnt={} process", request, request.refCnt());
+            TMessage header = request.getHeader();
             processor.process(request, response);
-
+            logger.info("process request sequence={} take {}ms", header.sequence, System.currentTimeMillis() - request.getRequestTime());
             Future future = context.writeAndFlush(response);
             if (future.isDone()) {
                 if (!future.isSuccess()) {

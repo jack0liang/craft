@@ -33,21 +33,21 @@ public class CraftServer {
 
     private static final String SERVICE_AUTOCONFIG = "service.xml";
 
-    private ConfigurableApplicationContext applicationContext;
+    private volatile ConfigurableApplicationContext applicationContext;
 
     private String host;
 
     private Integer port;
 
-    private Channel channel;
+    private volatile Channel channel;
 
-    private EventLoopGroup bossGroup;
+    private volatile EventLoopGroup bossGroup;
 
-    private EventLoopGroup workerGroup;
+    private volatile EventLoopGroup workerGroup;
 
-    private ExecutorService businessExecutor;
+    private volatile ExecutorService businessExecutor;
 
-    private ServiceRegistry registry;
+    private volatile ServiceRegistry registry;
 
     private PropertyManager propertyManager;
 
@@ -155,13 +155,13 @@ public class CraftServer {
         } catch (Exception e) {
             throw new IOException(e.getMessage(), e);
         }
-        //等待1s, 避免有些还没感知到服务下线
-        try {
-            TimeUnit.SECONDS.sleep(10);
-            logger.info("close 2/7 wait unregister sync done");
-        } catch (InterruptedException e) {
-            throw new IOException(e.getMessage(), e);
-        }
+//        //等待1s, 避免有些还没感知到服务下线
+//        try {
+//            TimeUnit.SECONDS.sleep(10);
+//            logger.info("close 2/7 wait unregister sync done");
+//        } catch (InterruptedException e) {
+//            throw new IOException(e.getMessage(), e);
+//        }
         //关闭端口监听
         try {
             if (channel != null) {

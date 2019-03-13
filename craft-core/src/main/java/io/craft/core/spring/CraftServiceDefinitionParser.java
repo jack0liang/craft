@@ -17,6 +17,7 @@ import org.w3c.dom.Element;
 
 import java.net.UnknownHostException;
 
+@SuppressWarnings({"unchecked"})
 public class CraftServiceDefinitionParser extends AbstractBeanDefinitionParser {
 
     @Override
@@ -76,13 +77,10 @@ public class CraftServiceDefinitionParser extends AbstractBeanDefinitionParser {
 
         Class processor = null;
 
-        LOOP:
-        for(Class clz : implIface.getClasses()) {
-            for(Class iface : clz.getInterfaces()) {
-                if (iface.equals(TProcessor.class)) {
-                    processor = clz;
-                    break LOOP;
-                }
+        for(Class clz : implIface.getDeclaredClasses()) {
+            if (TProcessor.class.equals(clz.getSuperclass())) {
+                processor = clz;
+                break;
             }
         }
 
