@@ -5,8 +5,10 @@ import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
 import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
+import io.craft.core.lbschedule.RoundRobinSchedule;
 import io.craft.proxy.discovery.EtcdServiceDiscovery;
 import io.craft.proxy.handler.ProxyMessageHandler;
+import io.craft.proxy.lbs.FindService;
 import io.craft.proxy.pool.ChannelPoolManager;
 import io.craft.proxy.util.PropertyUtil;
 import io.netty.bootstrap.ServerBootstrap;
@@ -33,6 +35,7 @@ public class CraftProxy implements Closeable {
 //        applicationContext = new ClassPathXmlApplicationContext("proxy.xml");
 //        propertyManager = applicationContext.getBean(PropertyManager.class);
         EtcdServiceDiscovery discovery = initServiceDiscovery();
+        FindService findService = new FindService(discovery,RoundRobinSchedule.class);
 
         int port = Integer.valueOf(PropertyUtil.getProperty(Constants.APPLICATION_PORT));
 
@@ -53,7 +56,7 @@ public class CraftProxy implements Closeable {
                             ch.pipeline()
                                     .addLast(new CraftFramedMessageDecoder())
                                     .addLast(new CraftFramedMessageEncoder())
-                                    .addLast(new ProxyMessageHandler(discovery));
+                                    .addLast(new ProxyMessageHandler(findService));
                         }
                     });
             ChannelFuture f = bootstrap.bind().sync();
