@@ -1,18 +1,16 @@
 package io.craft.idl.generator;
 
-import com.google.common.collect.Lists;
 import io.craft.core.annotation.*;
 import io.craft.idl.constant.ClassType;
 import io.craft.idl.meta.MetaClass;
 import io.craft.idl.meta.MetaMethod;
 import org.apache.commons.lang3.StringUtils;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 
-import static io.craft.core.constant.Constants.*;
+import static io.craft.core.constant.Constants.SEQUENCE_START_OFFSET;
 
 @SuppressWarnings({"unchecked"})
 public abstract class Generator {
@@ -73,14 +71,14 @@ public abstract class Generator {
             for(Parameter parameter : method.getParameters()) {
                 Sequence sequence = parameter.getAnnotation(Sequence.class);
                 if (sequence == null) {
-                    throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " 缺少@Attribute注解");
+                    throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " 缺少@Sequence注解");
                 }
                 int seq = sequence.value();
                 if (idSet.contains(seq)) {
-                    throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " @Attribute注解value重复");
+                    throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " @Sequence注解value重复");
                 }
-                if (seq < 0 || seq > Short.MAX_VALUE) {
-                    throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " @Attribute注解value超过short范围：["+Short.MIN_VALUE+"-"+Short.MAX_VALUE+"]");
+                if (seq < SEQUENCE_START_OFFSET || seq > Short.MAX_VALUE) {
+                    throw new Exception(clazz.getName() + "#" + method.getName() + " 参数 " + parameter.getName() + " @Sequence注解value超过范围：["+ SEQUENCE_START_OFFSET +"-"+Short.MAX_VALUE+"]");
                 }
                 Required required = parameter.getAnnotation(Required.class);
                 idSet.add(seq);
@@ -145,14 +143,14 @@ public abstract class Generator {
                 }
                 Sequence sequence = field.getAnnotation(Sequence.class);
                 if (sequence == null) {
-                    throw new Exception(cls.getName() + "." + field.getName() + " 缺少@Attribute注解");
+                    throw new Exception(cls.getName() + "." + field.getName() + " 缺少@Sequence注解");
                 }
                 int seq = sequence.value();
                 if (idSet.contains(seq)) {
-                    throw new Exception(cls.getName() + "." + field.getName() + " @Attribute注解value重复");
+                    throw new Exception(cls.getName() + "." + field.getName() + " @Sequence注解value重复");
                 }
-                if (seq < Short.MIN_VALUE || seq > Short.MAX_VALUE) {
-                    throw new Exception(cls.getName() + "." + field.getName() + " @Attribute注解value超过short范围：["+Short.MIN_VALUE+"-"+Short.MAX_VALUE+"]");
+                if (seq < 0 || seq > Short.MAX_VALUE) {
+                    throw new Exception(cls.getName() + "." + field.getName() + " @Sequence注解value超过范围：[0-"+Short.MAX_VALUE+"]");
                 }
                 Required required = field.getAnnotation(Required.class);
                 idSet.add(seq);

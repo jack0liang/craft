@@ -34,6 +34,8 @@
     ${parent}.read(protocol);
     <#elseif field.type.getCode() == "DATE">
     ${parent} = new java.util.Date(protocol.read${field.type.getName()?lower_case?cap_first}());
+    <#elseif field.type.getCode() == "ENUM">
+    ${parent} = ${field.fullClassName}.findByValue(protocol.read${field.type.getName()?lower_case?cap_first}());
     <#else>
     ${parent} = protocol.read${field.type.getName()?lower_case?cap_first}();
     </#if>
@@ -68,6 +70,8 @@ if (${parent} != null) {
         ${parent}.write(protocol);
     <#elseif field.type.getCode() == "DATE">
         protocol.write${field.type.getName()?lower_case?cap_first}(${parent}.getTime());
+    <#elseif field.type.getCode() == "ENUM">
+        protocol.write${field.type.getName()?lower_case?cap_first}(${parent}.getValue());
     <#else>
         protocol.write${field.type.getName()?lower_case?cap_first}(${parent});
     </#if>

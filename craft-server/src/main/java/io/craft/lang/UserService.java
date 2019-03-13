@@ -30,10 +30,13 @@ public interface UserService {
         Set<Integer> sets;
 
         @Sequence(4)
-        Map<Double, Short> maps;
+        Map<String, String> maps;
 
         @Sequence(5)
         Date joinDate;
+
+        @Sequence(6)
+        UserType userType;
 
     }
 
@@ -56,13 +59,13 @@ public interface UserService {
             @ErrorCode(value = 1001, label = "查询不到"),
             @ErrorCode(value = 1002, label = "用户已被停用")
     })
-    UserModel get(@Sequence(value = 0) @Label("用户ID") Long id);
+    UserModel get(@Sequence(10) @Label("用户ID") Long id);
 
     @Provider
     void ping();
 
     @Provider
     @Label("查询用户")
-    UserModel gets(@Sequence(value = 0, name = "ids") @Label("批量用户ID") List<Long> ids);
+    UserModel gets(@Sequence(10) @Label("批量用户ID") List<List<List<Long>>> ids);
 
 }

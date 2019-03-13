@@ -76,7 +76,7 @@ public class App {
             long beginTime = System.currentTimeMillis();
             UserModel model = client.get(System.currentTimeMillis());
             long endTime = System.currentTimeMillis();
-            logger.debug("request success, latency={}ms, response={}", (endTime - beginTime), model);
+            logger.info("request success, latency={}ms, response={}", (endTime - beginTime), model);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

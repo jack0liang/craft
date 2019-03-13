@@ -20,7 +20,7 @@ public enum ClassType {
     MAP("MAP"),
     SET("SET"),
     LIST("LIST"),
-    ENUM("ENUM"),
+    ENUM("INT"),
     DATE("LONG"),
 
     ;

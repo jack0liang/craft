@@ -13,6 +13,9 @@ public interface ${className} {
 
     <#list methods as method>
     <@format blank=4>
+    <#if method.deprecated>
+    @java.lang.Deprecated
+    </#if>
     <@common.args method.name+"_args" method.parameters />
     <#if method.returnValue.type.getName() == "VOID">
         <#assign returnFields=[] />
@@ -20,6 +23,9 @@ public interface ${className} {
         <#assign returnFields=[method.returnValue] />
     </#if>
 
+    <#if method.deprecated>
+    @java.lang.Deprecated
+    </#if>
     <@common.struct method.name+"_result" returnFields />
     </@format>
     </#list>

@@ -1,4 +1,3 @@
-
 package io.craft.abc.model;
 
 public class UserModel implements io.craft.core.thrift.TSerializable {
@@ -11,13 +10,15 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
     private static final io.craft.core.thrift.TField SETS_FIELD_DESC = new io.craft.core.thrift.TField("sets", io.craft.core.thrift.TType.SET, (short)3);
     private static final io.craft.core.thrift.TField MAPS_FIELD_DESC = new io.craft.core.thrift.TField("maps", io.craft.core.thrift.TType.MAP, (short)4);
     private static final io.craft.core.thrift.TField JOINDATE_FIELD_DESC = new io.craft.core.thrift.TField("joinDate", io.craft.core.thrift.TType.LONG, (short)5);
+    private static final io.craft.core.thrift.TField USERTYPE_FIELD_DESC = new io.craft.core.thrift.TField("userType", io.craft.core.thrift.TType.INT, (short)6);
 
     private java.lang.Long id;
     private java.lang.String name;
     private java.util.List<java.lang.String> lists;
     private java.util.Set<java.lang.Integer> sets;
-    private java.util.Map<java.lang.Double, java.lang.Short> maps;
+    private java.util.Map<java.lang.String, java.lang.String> maps;
     private java.util.Date joinDate;
+    private io.craft.abc.constant.UserType userType;
 
     public UserModel() {
     }
@@ -27,8 +28,9 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
             java.lang.String name, 
             java.util.List<java.lang.String> lists, 
             java.util.Set<java.lang.Integer> sets, 
-            java.util.Map<java.lang.Double, java.lang.Short> maps, 
-            java.util.Date joinDate
+            java.util.Map<java.lang.String, java.lang.String> maps, 
+            java.util.Date joinDate, 
+            io.craft.abc.constant.UserType userType
         )
         {
         this();
@@ -38,6 +40,7 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         this.sets = sets;
         this.maps = maps;
         this.joinDate = joinDate;
+        this.userType = userType;
     }
 
     public java.lang.Long getId() {
@@ -76,11 +79,11 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         return this;
     }
 
-    public java.util.Map<java.lang.Double, java.lang.Short> getMaps() {
+    public java.util.Map<java.lang.String, java.lang.String> getMaps() {
         return this.maps;
     }
 
-    public UserModel setMaps(java.util.Map<java.lang.Double, java.lang.Short> maps) {
+    public UserModel setMaps(java.util.Map<java.lang.String, java.lang.String> maps) {
         this.maps = maps;
         return this;
     }
@@ -94,13 +97,22 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         return this;
     }
 
+    public io.craft.abc.constant.UserType getUserType() {
+        return this.userType;
+    }
+
+    public UserModel setUserType(io.craft.abc.constant.UserType userType) {
+        this.userType = userType;
+        return this;
+    }
+
 
     @Override
     public boolean equals(java.lang.Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserModel obj = (UserModel) o;
-        return true && java.util.Objects.equals(id, obj.id) && java.util.Objects.equals(name, obj.name) && java.util.Objects.equals(lists, obj.lists) && java.util.Objects.equals(sets, obj.sets) && java.util.Objects.equals(maps, obj.maps) && java.util.Objects.equals(joinDate, obj.joinDate);
+        return true && java.util.Objects.equals(id, obj.id) && java.util.Objects.equals(name, obj.name) && java.util.Objects.equals(lists, obj.lists) && java.util.Objects.equals(sets, obj.sets) && java.util.Objects.equals(maps, obj.maps) && java.util.Objects.equals(joinDate, obj.joinDate) && java.util.Objects.equals(userType, obj.userType);
     }
 
     @Override
@@ -112,6 +124,7 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         result = 31 * result + (sets != null ? sets.hashCode() : 0);
         result = 31 * result + (maps != null ? maps.hashCode() : 0);
         result = 31 * result + (joinDate != null ? joinDate.hashCode() : 0);
+        result = 31 * result + (userType != null ? userType.hashCode() : 0);
         return result;
     }
 
@@ -135,6 +148,9 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         sb.append(",");
         sb.append("joinDate:");
         sb.append(this.joinDate);
+        sb.append(",");
+        sb.append("userType:");
+        sb.append(this.userType);
         sb.append(")");
         return sb.toString();
     }
@@ -207,15 +223,15 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
                     if (field.type == io.craft.core.thrift.TType.MAP) {
                         {
                             io.craft.core.thrift.TMap map0 = protocol.readMapBegin();
-                            this.maps = new java.util.HashMap<java.lang.Double,java.lang.Short>(2 * map0.size);
-                            java.lang.Double key0;
-                            java.lang.Short val0;
+                            this.maps = new java.util.HashMap<java.lang.String,java.lang.String>(2 * map0.size);
+                            java.lang.String key0;
+                            java.lang.String val0;
                             for (int i0 = 0; i0 < map0.size; ++i0) {
                             {
-                                key0 = protocol.readDouble();
+                                key0 = protocol.readString();
                             }
                             {
-                                val0 = protocol.readShort();
+                                val0 = protocol.readString();
                             }
                                 this.maps.put(key0, val0);
                             }
@@ -228,6 +244,15 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
                     if (field.type == io.craft.core.thrift.TType.LONG) {
                         {
                             this.joinDate = new java.util.Date(protocol.readLong());
+                        }
+                    } else {
+                        io.craft.core.thrift.TProtocolUtil.skip(protocol, field.type);
+                    }
+                    break;
+                case 6: // userType INT
+                    if (field.type == io.craft.core.thrift.TType.INT) {
+                        {
+                            this.userType = io.craft.abc.constant.UserType.findByValue(protocol.readInt());
                         }
                     } else {
                         io.craft.core.thrift.TProtocolUtil.skip(protocol, field.type);
@@ -306,16 +331,16 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
             protocol.writeFieldBegin(MAPS_FIELD_DESC);
             if (this.maps != null) {
                 {
-                    protocol.writeMapBegin(new io.craft.core.thrift.TMap(io.craft.core.thrift.TType.DOUBLE, io.craft.core.thrift.TType.SHORT, this.maps.size()));
-                    for (java.util.Map.Entry<java.lang.Double, java.lang.Short> entry0 : this.maps.entrySet()) {
+                    protocol.writeMapBegin(new io.craft.core.thrift.TMap(io.craft.core.thrift.TType.STRING, io.craft.core.thrift.TType.STRING, this.maps.size()));
+                    for (java.util.Map.Entry<java.lang.String, java.lang.String> entry0 : this.maps.entrySet()) {
                 if (entry0.getKey() != null) {
                     {
-                        protocol.writeDouble(entry0.getKey());
+                        protocol.writeString(entry0.getKey());
                     }
                 }
                 if (entry0.getValue() != null) {
                     {
-                        protocol.writeShort(entry0.getValue());
+                        protocol.writeString(entry0.getValue());
                     }
                 }
                     }
@@ -329,6 +354,15 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
             if (this.joinDate != null) {
                 {
                     protocol.writeLong(this.joinDate.getTime());
+                }
+            }
+            protocol.writeFieldEnd();
+        }
+        if (this.userType != null) {
+            protocol.writeFieldBegin(USERTYPE_FIELD_DESC);
+            if (this.userType != null) {
+                {
+                    protocol.writeInt(this.userType.getValue());
                 }
             }
             protocol.writeFieldEnd();

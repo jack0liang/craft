@@ -12,7 +12,10 @@ import io.craft.server.executor.CraftRejectedExecutionHandler;
 import io.craft.server.executor.CraftThreadFactory;
 import io.craft.server.handler.CraftMessageHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -24,7 +27,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class CraftServer {
@@ -135,13 +137,9 @@ public class CraftServer {
                 logger.error("server close error={}", e.getMessage(), e);
             }
         }));
-        try {
-            createApplicationContext();
-            listen();
-            register();
-        } finally {
-            close();
-        }
+        createApplicationContext();
+        listen();
+        register();
     }
 
     public synchronized void close() throws Exception {

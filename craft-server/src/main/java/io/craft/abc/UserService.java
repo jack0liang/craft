@@ -4,7 +4,7 @@ public interface UserService {
 
     io.craft.abc.model.UserModel get(java.lang.Long id) throws io.craft.core.thrift.TException;
 
-    io.craft.abc.model.UserModel gets(java.util.List<java.lang.Long> ids) throws io.craft.core.thrift.TException;
+    io.craft.abc.model.UserModel gets(java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids) throws io.craft.core.thrift.TException;
 
     void ping() throws io.craft.core.thrift.TException;
 
@@ -13,7 +13,7 @@ public interface UserService {
     
         private static final io.craft.core.thrift.TStruct STRUCT_DESC = new io.craft.core.thrift.TStruct("get_args");
     
-        private static final io.craft.core.thrift.TField ID_FIELD_DESC = new io.craft.core.thrift.TField("id", io.craft.core.thrift.TType.LONG, (short)0);
+        private static final io.craft.core.thrift.TField ID_FIELD_DESC = new io.craft.core.thrift.TField("id", io.craft.core.thrift.TType.LONG, (short)10);
     
         private java.lang.Long id;
     
@@ -65,7 +65,7 @@ public interface UserService {
         @Override
         protected void readInternal(io.craft.core.thrift.TProtocol protocol, io.craft.core.thrift.TField field) throws io.craft.core.thrift.TException {
             switch (field.sequence) {
-                case 0: // id LONG
+                case 10: // id LONG
                     if (field.type == io.craft.core.thrift.TType.LONG) {
                         {
                             this.id = protocol.readLong();
@@ -207,26 +207,26 @@ public interface UserService {
     
         private static final io.craft.core.thrift.TStruct STRUCT_DESC = new io.craft.core.thrift.TStruct("gets_args");
     
-        private static final io.craft.core.thrift.TField IDS_FIELD_DESC = new io.craft.core.thrift.TField("ids", io.craft.core.thrift.TType.LIST, (short)0);
+        private static final io.craft.core.thrift.TField IDS_FIELD_DESC = new io.craft.core.thrift.TField("ids", io.craft.core.thrift.TType.LIST, (short)10);
     
-        private java.util.List<java.lang.Long> ids;
+        private java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids;
     
         public gets_args() {
         }
     
         public gets_args(
-                java.util.List<java.lang.Long> ids
+                java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids
             )
             {
             this();
             this.ids = ids;
         }
     
-        public java.util.List<java.lang.Long> getIds() {
+        public java.util.List<java.util.List<java.util.List<java.lang.Long>>> getIds() {
             return this.ids;
         }
     
-        public gets_args setIds(java.util.List<java.lang.Long> ids) {
+        public gets_args setIds(java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids) {
             this.ids = ids;
             return this;
         }
@@ -259,15 +259,33 @@ public interface UserService {
         @Override
         protected void readInternal(io.craft.core.thrift.TProtocol protocol, io.craft.core.thrift.TField field) throws io.craft.core.thrift.TException {
             switch (field.sequence) {
-                case 0: // ids LIST
+                case 10: // ids LIST
                     if (field.type == io.craft.core.thrift.TType.LIST) {
                         {
                             io.craft.core.thrift.TList list0 = protocol.readListBegin();
-                            this.ids = new java.util.ArrayList<java.lang.Long>(list0.size);
-                            java.lang.Long val0;
+                            this.ids = new java.util.ArrayList<java.util.List<java.util.List<java.lang.Long>>>(list0.size);
+                            java.util.List<java.util.List<java.lang.Long>> val0;
                             for (int i0 = 0; i0 < list0.size; ++i0) {
                             {
-                                val0 = protocol.readLong();
+                                io.craft.core.thrift.TList list1 = protocol.readListBegin();
+                                val0 = new java.util.ArrayList<java.util.List<java.lang.Long>>(list1.size);
+                                java.util.List<java.lang.Long> val1;
+                                for (int i1 = 0; i1 < list1.size; ++i1) {
+                                    {
+                                        io.craft.core.thrift.TList list2 = protocol.readListBegin();
+                                        val1 = new java.util.ArrayList<java.lang.Long>(list2.size);
+                                        java.lang.Long val2;
+                                        for (int i2 = 0; i2 < list2.size; ++i2) {
+                                                {
+                                                    val2 = protocol.readLong();
+                                                }
+                                            val1.add(val2);
+                                        }
+                                        protocol.readListEnd();
+                                    }
+                                    val0.add(val1);
+                                }
+                                protocol.readListEnd();
                             }
                                 this.ids.add(val0);
                             }
@@ -293,11 +311,27 @@ public interface UserService {
                 protocol.writeFieldBegin(IDS_FIELD_DESC);
                     if (this.ids != null) {
                         {
-                            protocol.writeListBegin(new io.craft.core.thrift.TList(io.craft.core.thrift.TType.LONG, this.ids.size()));
-                            for (java.lang.Long val0 : this.ids) {
+                            protocol.writeListBegin(new io.craft.core.thrift.TList(io.craft.core.thrift.TType.LIST, this.ids.size()));
+                            for (java.util.List<java.util.List<java.lang.Long>> val0 : this.ids) {
                         if (val0 != null) {
                             {
-                                protocol.writeLong(val0);
+                                protocol.writeListBegin(new io.craft.core.thrift.TList(io.craft.core.thrift.TType.LIST, val0.size()));
+                                for (java.util.List<java.lang.Long> val1 : val0) {
+                                if (val1 != null) {
+                                    {
+                                        protocol.writeListBegin(new io.craft.core.thrift.TList(io.craft.core.thrift.TType.LONG, val1.size()));
+                                        for (java.lang.Long val2 : val1) {
+                                            if (val2 != null) {
+                                                {
+                                                    protocol.writeLong(val2);
+                                                }
+                                            }
+                                        }
+                                        protocol.writeListEnd();
+                                    }
+                                }
+                                }
+                                protocol.writeListEnd();
                             }
                         }
                             }
@@ -630,12 +664,12 @@ public interface UserService {
             return null;
         }
 
-        public io.craft.abc.model.UserModel gets(java.util.List<java.lang.Long> ids) throws io.craft.core.thrift.TException {
+        public io.craft.abc.model.UserModel gets(java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids) throws io.craft.core.thrift.TException {
             io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> future = send_gets(ids);
             return recv_gets(future);
         }
 
-        private io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> send_gets(java.util.List<java.lang.Long> ids) throws io.craft.core.thrift.TException  {
+        private io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> send_gets(java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids) throws io.craft.core.thrift.TException  {
             gets_args args = new gets_args();
             args.setServiceName(SERVICE_NAME);
             String traceId = io.craft.core.util.TraceUtil.getTraceId();

@@ -18,11 +18,13 @@ public class Constants {
 
     public final static String HOSTS_PATH = "/hosts/";
 
-    public final static short SERVICE_NAME_SEQUENCE = Short.MIN_VALUE;
+    public final static short SERVICE_NAME_SEQUENCE = 1;
 
-    public final static short TRACE_ID_SEQUENCE = (short) (Short.MIN_VALUE + 1);
+    public final static short TRACE_ID_SEQUENCE = 2;
 
-    public final static short COOKIE_SEQUENCE = (short) (Short.MIN_VALUE + 2);
+    public final static short COOKIE_SEQUENCE = 3;
+
+    public final static short SEQUENCE_START_OFFSET = 10;//保留前10个sequence以备他用
 
     public final static int INT_BYTE_LENGTH = 4;
 

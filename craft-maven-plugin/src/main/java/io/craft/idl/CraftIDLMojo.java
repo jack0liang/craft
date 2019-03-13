@@ -28,9 +28,6 @@ public class CraftIDLMojo extends AbstractMojo {
             Generator generator;
             generator = new JavaGenerator(clazz, project.getBuild().getSourceDirectory());
             generator.process();
-
-//            generator = new ThriftGenerator(clazz, project.getBuild().getSourceDirectory());
-//            generator.process();
         } catch (Exception e) {
             throw new MojoExecutionException("发生异常：" + e.getMessage(), e);
         }
