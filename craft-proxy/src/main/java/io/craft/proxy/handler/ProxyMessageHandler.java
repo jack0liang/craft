@@ -1,8 +1,8 @@
 package io.craft.proxy.handler;
 
-import io.craft.core.constant.Constants;
-import io.craft.core.message.CraftFramedMessage;
-import io.craft.proxy.discovery.EtcdServiceDiscovery;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TService;
+import io.craft.proxy.lbs.FindService;
 import io.craft.proxy.proxy.ProxyClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
@@ -12,7 +12,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.thrift.protocol.TMessage;
 import org.springframework.util.Assert;
 
 import java.util.HashMap;
@@ -55,7 +54,7 @@ public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftMessag
         logger.debug("name={}, traceId={}", service.name, service.traceId);
 
         message.retain();
-        String serviceAddr = findService.find(serviceName);
+        String serviceAddr = findService.find(service.name);
         ProxyClient serverProxy = getServerProxy(ctx.channel().eventLoop(), serviceAddr);
         serverProxy.write(ctx.channel(),message.getHeader(),message);
 //        PoolChannelHolder holder = addr2Channel.get(serviceAddr);
