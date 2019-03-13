@@ -1,20 +1,14 @@
 package io.craft.core.client;
 
-import io.craft.core.constant.Constants;
-import io.craft.core.message.CraftFramedMessage;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.*;
 import io.craft.core.util.PropertyUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
-import org.apache.thrift.TApplicationException;
-import org.apache.thrift.TBase;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TMessage;
-import org.apache.thrift.protocol.TMessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +40,14 @@ public class CraftClient extends BaseCraftClient {
                 ,
                 new NioEventLoopGroup(2)
         );
-        //发送服务监听消息消息(proxy专用,直接连接服务端的话,服务端会忽略此消息)
+        //发送服务监听消息(proxy专用,直接连接服务端的话,服务端会忽略此消息)
         MessageProducer producer = new ClientInitProducer(serviceName);
-        CraftFramedMessage response = null;
+        CraftMessage response = null;
         try {
             //同步等待注册返回
             response = write(producer).get();
             TMessage msg = response.readMessageBegin();
-            if (msg.type != Constants.MESSAGE_TYPE_INIT) {
+            if (msg.type != TMessageType.REGISTERED) {
                 throw new RuntimeException("proxy init failed");
             }
             logger.info("proxy init [{}] done", serviceName);
@@ -66,32 +60,32 @@ public class CraftClient extends BaseCraftClient {
         }
     }
 
-    protected Future<CraftFramedMessage> sendBase(String methodName, TBase<?,?> args) throws TException {
+    protected Future<CraftMessage> sendBase(String methodName, TArgs args) throws io.craft.core.thrift.TException {
         return sendBase(methodName, args, TMessageType.CALL);
     }
 
-    protected Future<CraftFramedMessage> sendBase(String methodName, TBase<?,?> args, byte type) throws TException {
+    protected Future<CraftMessage> sendBase(String methodName, TArgs args, TMessageType type) throws io.craft.core.thrift.TException {
         MessageProducer producer = new ClientMessageProducer(methodName, args, type);
         return write(producer);
     }
 
-    protected void receiveBase(Future<CraftFramedMessage> future, TBase<?,?> result, String methodName) throws TException {
-        CraftFramedMessage message = null;
+    protected void receiveBase(Future<CraftMessage> future, TSerializable result, String methodName) throws io.craft.core.thrift.TException {
+        CraftMessage message = null;
         try {
             try {
                 message = future.get();
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);
-                throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "future get error, error=" + t.getMessage());
+                throw new TException(t.getMessage(), t);
             }
 
             if (message == null) {
-                throw new TApplicationException(TApplicationException.INTERNAL_ERROR, "response is null");
+                throw new TException("response is null");
             }
 
             TMessage msg = message.readMessageBegin();
             if (msg.type == TMessageType.EXCEPTION) {
-                TApplicationException x = new TApplicationException();
+                TException x = new TException();
                 x.read(message);
                 message.readMessageEnd();
                 throw x;
@@ -127,9 +121,9 @@ public class CraftClient extends BaseCraftClient {
         }
 
         @Override
-        public CraftFramedMessage produce(Channel channel) throws TException {
-            CraftFramedMessage message = new CraftFramedMessage(channel);
-            message.writeMessageBegin(new TMessage(serviceName, Constants.MESSAGE_TYPE_INIT, messageId));
+        public CraftMessage produce(Channel channel) throws io.craft.core.thrift.TException {
+            CraftMessage message = new CraftMessage(channel);
+            message.writeMessageBegin(new TMessage(serviceName, TMessageType.REGISTER, messageId));
             message.writeMessageEnd();
             return message;
         }
@@ -139,13 +133,13 @@ public class CraftClient extends BaseCraftClient {
 
         private String methodName;
 
-        private TBase<?, ?> args;
+        private TArgs args;
 
-        private byte type;
+        private TMessageType type;
 
         private int messageId;
 
-        public ClientMessageProducer(String methodName, TBase<?, ?> args, byte type) {
+        public ClientMessageProducer(String methodName, TArgs args, TMessageType type) {
             this.methodName = methodName;
             this.args = args;
             this.type = type;
@@ -162,8 +156,8 @@ public class CraftClient extends BaseCraftClient {
         }
 
         @Override
-        public CraftFramedMessage produce(Channel channel) throws TException {
-            CraftFramedMessage message = new CraftFramedMessage(channel);
+        public CraftMessage produce(Channel channel) throws io.craft.core.thrift.TException {
+            CraftMessage message = new CraftMessage(channel);
             message.writeMessageBegin(new TMessage(methodName, type, messageId));
             args.write(message);
             message.writeMessageEnd();

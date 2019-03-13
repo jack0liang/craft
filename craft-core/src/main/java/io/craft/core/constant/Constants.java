@@ -1,12 +1,5 @@
 package io.craft.core.constant;
 
-import io.craft.core.message.CraftFramedMessage;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
-
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-
 public class Constants {
 
     public final static int DEFAULT_MAX_FRAME_LENGTH = 16384000;//16m
@@ -29,10 +22,8 @@ public class Constants {
 
     public final static short TRACE_ID_SEQUENCE = (short) (Short.MIN_VALUE + 1);
 
-    public final static short HEADER_SEQUENCE = (short) (Short.MIN_VALUE + 2);
+    public final static short COOKIE_SEQUENCE = (short) (Short.MIN_VALUE + 2);
 
-    public final static int FRAME_SIZE_BYTE_LENGTH = 4;
-
-    public final static byte MESSAGE_TYPE_INIT = 127;
+    public final static int INT_BYTE_LENGTH = 4;
 
 }

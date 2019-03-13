@@ -1,21 +1,18 @@
 package io.craft.server.handler;
 
-import io.craft.core.constant.Constants;
-import io.craft.core.message.CraftFramedMessage;
-import io.craft.server.executor.CraftBusinessExecutor;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TMessage;
+import io.craft.core.thrift.TMessageType;
+import io.craft.core.thrift.TProcessor;
 import io.craft.server.executor.CraftBusinessTask;
-import io.craft.server.executor.CraftRejectedExecutionHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.apache.thrift.TProcessor;
-import org.apache.thrift.protocol.TMessage;
 
 import java.util.concurrent.ExecutorService;
 
 @ChannelHandler.Sharable
-public class CraftMessageHandler extends SimpleChannelInboundHandler<CraftFramedMessage> {
+public class CraftMessageHandler extends SimpleChannelInboundHandler<CraftMessage> {
 
     private ExecutorService executor;
 
@@ -27,12 +24,12 @@ public class CraftMessageHandler extends SimpleChannelInboundHandler<CraftFramed
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
-        TMessage msg = message.getMessageHeader();
-        if (msg.type == Constants.MESSAGE_TYPE_INIT) {
+    protected void channelRead0(ChannelHandlerContext ctx, CraftMessage message) throws Exception {
+        TMessage msg = message.getHeader();
+        if (msg.type == TMessageType.REGISTER) {
             //服务端直接忽略客户端发过来的初始化连接消息
-            CraftFramedMessage response = new CraftFramedMessage(ctx.channel());
-            response.writeMessageBegin(new TMessage(msg.name, Constants.MESSAGE_TYPE_INIT, msg.seqid));
+            CraftMessage response = new CraftMessage(ctx.channel());
+            response.writeMessageBegin(new TMessage(msg.name, TMessageType.REGISTERED, msg.sequence));
             response.writeMessageEnd();
             ctx.writeAndFlush(response);
             return;

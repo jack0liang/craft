@@ -8,7 +8,7 @@ public class TraceUtil {
 
     private static final ThreadLocal<String> traceId = new ThreadLocal<>();
 
-    private static final ThreadLocal<Map<String, String>> header = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String, String>> cookie = new ThreadLocal<>();
 
     public static String generateTraceId() {
         return UUID.randomUUID().toString().replace("-", "");
@@ -22,30 +22,33 @@ public class TraceUtil {
         return traceId.get();
     }
 
-    public static Map<String, String> getHeader() {
-        Map<String, String> head = header.get();
+    public static Map<String, String> getCookie() {
+        Map<String, String> head = cookie.get();
         if (head == null) {
             head = new HashMap<>(0);
-            header.set(head);
+            cookie.set(head);
         }
         return head;
     }
 
-    public static void setHeader(Map<String, String> head) {
-        getHeader().putAll(head);
+    public static void setCookie(Map<String, String> head) {
+        if (head == null) {
+            return;
+        }
+        getCookie().putAll(head);
     }
 
-    public static void addHeader(String name, String value) {
-        getHeader().put(name, value);
+    public static void addCookie(String name, String value) {
+        getCookie().put(name, value);
     }
 
-    public static void removeHeader(String name) {
-        getHeader().remove(name);
+    public static void removeCookie(String name) {
+        getCookie().remove(name);
     }
 
     public static void clear() {
         traceId.remove();
-        getHeader().clear();
+        cookie.remove();
     }
 
 }

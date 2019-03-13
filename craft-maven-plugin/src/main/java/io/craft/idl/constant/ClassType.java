@@ -12,16 +12,16 @@ public enum ClassType {
     BOOL("BOOL"),
     BYTE("BYTE"),
     DOUBLE("DOUBLE"),
-    I16("I16"),
-    I32("I32"),
-    I64("I64"),
+    I16("SHORT"),
+    I32("INT"),
+    I64("LONG"),
     STRING("STRING"),
     STRUCT("STRUCT"),
     MAP("MAP"),
     SET("SET"),
     LIST("LIST"),
     ENUM("ENUM"),
-    DATE("I64"),
+    DATE("LONG"),
 
     ;
 

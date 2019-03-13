@@ -2,14 +2,14 @@ package io.craft.core.client;
 
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
-import io.craft.core.message.CraftFramedMessage;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TException;
+import io.craft.core.thrift.TMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.Future;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class BaseCraftClient {
 
     private Channel channel;
 
-    private Map<Integer, DefaultPromise<CraftFramedMessage>> promiseMap;
+    private Map<Integer, DefaultPromise<CraftMessage>> promiseMap;
 
 
     public BaseCraftClient(Bootstrap bootstrap, EventLoopGroup executors) {
@@ -64,12 +64,12 @@ public class BaseCraftClient {
         });
     }
 
-    protected Future<CraftFramedMessage> write(MessageProducer producer) throws TException {
+    protected Future<CraftMessage> write(MessageProducer producer) throws TException {
 
         //生成消息序号
         int messageId = sequence.getAndIncrement();
         //生成future
-        DefaultPromise<CraftFramedMessage> promise = new DefaultPromise<>(this.executors.next());
+        DefaultPromise<CraftMessage> promise = new DefaultPromise<>(this.executors.next());
         promise.setUncancellable();
         //设置Producer的消息ID
         producer.setMessageId(messageId);
@@ -136,9 +136,9 @@ public class BaseCraftClient {
         }
     }
 
-    private void processReceived(int messageId, CraftFramedMessage message, Throwable cause) throws TException {
+    private void processReceived(int messageId, CraftMessage message, Throwable cause) throws TException {
         logger.debug("promise get, messageId={}", messageId);
-        DefaultPromise<CraftFramedMessage> promise = promiseMap.get(messageId);
+        DefaultPromise<CraftMessage> promise = promiseMap.get(messageId);
         promiseMap.remove(messageId);
         logger.debug("promise removed, messageId={}, promise={}", messageId, promise);
         if (cause != null) {
@@ -169,7 +169,7 @@ public class BaseCraftClient {
     }
 
     private void doWrite(MessageProducer producer) throws TException {
-        CraftFramedMessage message = producer.produce(channel);
+        CraftMessage message = producer.produce(channel);
         logger.debug("do write message messageId={}, readerIndex={}, readableBytes={}", producer.getMessageId(), message.readerIndex(), message.readableBytes());
         ChannelFuture future = channel.writeAndFlush(message);
         if (future.isDone()) {
@@ -194,13 +194,13 @@ public class BaseCraftClient {
 
         int getMessageId();
 
-        CraftFramedMessage produce(Channel channel) throws TException;
+        CraftMessage produce(Channel channel) throws TException;
 
     }
 
 
     @ChannelHandler.Sharable
-    private class ClientChannelHandler extends SimpleChannelInboundHandler<CraftFramedMessage> {
+    private class ClientChannelHandler extends SimpleChannelInboundHandler<CraftMessage> {
 
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -220,11 +220,11 @@ public class BaseCraftClient {
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
+        protected void channelRead0(ChannelHandlerContext ctx, CraftMessage message) throws Exception {
             message.retain();
-            TMessage msg = message.getMessageHeader();
-            logger.debug("seq={}, received response, refCnt={}", msg.seqid, message.refCnt());
-            processReceived(msg.seqid, message, null);
+            TMessage msg = message.getHeader();
+            logger.debug("seq={}, received response, refCnt={}", msg.sequence, message.refCnt());
+            processReceived(msg.sequence, message, null);
         }
     }
 }

@@ -1,17 +1,18 @@
 package io.craft.core.codec;
 
 import io.craft.core.constant.Constants;
-import io.craft.core.message.CraftFramedMessage;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static io.craft.core.constant.Constants.*;
+import static io.craft.core.constant.Constants.DEFAULT_MAX_FRAME_LENGTH;
+import static io.craft.core.constant.Constants.INT_BYTE_LENGTH;
 
 public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
 
@@ -64,13 +65,13 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws TException {
         logger.debug("received bytes {}", in.readableBytes());
         readBuffer.writeBytes(in);
         while (true) {
             if (isNewFrame) {
                 //收到第一个数据包, 记录请求开始时间
-                if (readBuffer.readableBytes() < FRAME_SIZE_BYTE_LENGTH) {
+                if (readBuffer.readableBytes() < INT_BYTE_LENGTH) {
                     //如果当前的缓冲区可读取字节小于int占用长度，此次无法读取帧大小，直接放弃
                     break;
                 }
@@ -78,17 +79,16 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
                 int frameLength = readBuffer.getInt(0);
 
                 if (frameLength < 0) {
-                    throw new TTransportException(TTransportException.CORRUPTED_DATA, "Read a negative frame size (" + frameLength + ")!");
+                    throw new TException("Read a negative frame size (" + frameLength + ")!");
                 }
 
                 if (frameLength > maxFrameLength) {
                     //跳过帧长度
-                    readBuffer.skipBytes(frameLength + FRAME_SIZE_BYTE_LENGTH);
-                    throw new TTransportException(TTransportException.CORRUPTED_DATA,
-                            "Frame size (" + frameLength + ") larger than max length (" + maxFrameLength + ")!");
+                    readBuffer.skipBytes(frameLength + INT_BYTE_LENGTH);
+                    throw new TException("Frame size (" + frameLength + ") larger than max length (" + maxFrameLength + ")!");
                 }
                 //帧长度要算上帧头
-                newMessage(frameLength + FRAME_SIZE_BYTE_LENGTH);
+                newMessage(frameLength + INT_BYTE_LENGTH);
             }
 
             if (readBuffer.readableBytes() >= frameLength) {
@@ -97,7 +97,7 @@ public class CraftFramedMessageDecoder extends ByteToMessageDecoder {
                     ByteBuf buffer = ctx.alloc().directBuffer(frameLength);
                     readBuffer.readBytes(buffer);
 
-                    out.add(new CraftFramedMessage(buffer, requestTime));
+                    out.add(new CraftMessage(buffer, requestTime));
                     //每次请求消息读取完后就丢弃已读byte
                     readBuffer.discardReadBytes();
 

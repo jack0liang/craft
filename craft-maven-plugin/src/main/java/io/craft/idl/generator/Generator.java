@@ -48,9 +48,6 @@ public abstract class Generator {
                                             .methods(serviceMethods)
                                             .build();
 
-
-        List<MetaClass> serviceFields = new ArrayList<>();
-
         //遍历方法
         for(Method method : clazz.getDeclaredMethods()) {
             Provider provider = method.getAnnotation(Provider.class);
@@ -68,34 +65,11 @@ public abstract class Generator {
             returnValue.setName("success");
             returnValue.setSequence((short) 0);
             returnValue.setRequired(returnValueRequired != null && returnValueRequired.value());
-            returnValue.setFields(Lists.newArrayList());
 
             //处理参数
             Set<Integer> idSet = new HashSet<>();
             List<MetaClass> metaParameters = new ArrayList<>();
-            //添加serviceName
-            MetaClass serviceNameClass = parse(String.class);
-            serviceNameClass.setName("serviceName");
-            serviceNameClass.setSequence(SERVICE_NAME_SEQUENCE);
-            serviceNameClass.setDeprecated(false);
-            serviceNameClass.setRequired(true);
-            metaParameters.add(serviceNameClass);
-            //添加traceId
-            MetaClass traceIdClass = parse(String.class);
-            traceIdClass.setName("traceId");
-            traceIdClass.setSequence(TRACE_ID_SEQUENCE);
-            traceIdClass.setDeprecated(false);
-            traceIdClass.setRequired(true);
-            metaParameters.add(traceIdClass);
-            //添加header
-            MetaClass headerClass = parse(ParameterizedTypeImpl.make(Map.class, new Type[]{String.class, String.class}, Map.class));
-            headerClass.setName("header");
-            headerClass.setSequence(HEADER_SEQUENCE);
-            headerClass.setDeprecated(false);
-            headerClass.setRequired(true);
-            metaParameters.add(headerClass);
 
-            List<MetaClass> methodParameters = new ArrayList<>();
             for(Parameter parameter : method.getParameters()) {
                 Sequence sequence = parameter.getAnnotation(Sequence.class);
                 if (sequence == null) {
@@ -116,33 +90,17 @@ public abstract class Generator {
                 parameterClass.setRequired(required != null ? required.value() : false);
                 parameterClass.setSequence((short) seq);
                 metaParameters.add(parameterClass);
-                methodParameters.add(parameterClass);
             }
 
             //排序参数
             Collections.sort(metaParameters, Comparator.comparing(MetaClass::getSequence));
-            Collections.sort(methodParameters, Comparator.comparing(MetaClass::getSequence));
 
-            MetaMethod metaMethod = new MetaMethod(method.getName(), returnValue, methodParameters, (method.getAnnotation(Deprecated.class) != null));
+
+
+            MetaMethod metaMethod = new MetaMethod(method.getName(), returnValue, metaParameters, (method.getAnnotation(Deprecated.class) != null));
 
             serviceMethods.add(metaMethod);
-
-            MetaClass methodArgs = MetaClass.builder().className(method.getName() + "_args").fullClassName(method.getName() + "_args").fields(metaParameters).build();
-            MetaClass methodRet = MetaClass.builder()
-                    .className(method.getName() + "_result")
-                    .fullClassName(method.getName() + "_result")
-                    .name("result")
-                    .fields(Lists.newArrayList())
-                    .build();
-
-            if (!ClassType.VOID.equals(returnValue.getType())) {
-                methodRet.getFields().add(returnValue);
-            }
-            serviceFields.add(methodArgs);
-            serviceFields.add(methodRet);
         }
-
-        serviceClass.setFields(serviceFields);
 
         processService(serviceClass);
 
@@ -261,6 +219,7 @@ public abstract class Generator {
                     .className(cls.getName() + "<" + StringUtils.join(actualTypeNames, ", ") + ">")
                     .build();
             metaClass.setFullClassName(metaClass.getClassName());
+
         } else {
             throw new Exception("不受支持的泛型类型：" + typeName + ", 只支持Set, List, Map");
         }

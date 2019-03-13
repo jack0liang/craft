@@ -1,18 +1,16 @@
 package io.craft.proxy.handler;
 
-import io.craft.core.constant.Constants;
-import io.craft.core.message.CraftFramedMessage;
-import io.craft.proxy.proxy.ProxyClient;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TMessage;
+import io.craft.core.thrift.TMessageType;
+import io.craft.core.thrift.TService;
 import io.craft.proxy.router.Router;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.thrift.protocol.TMessage;
-
-import java.util.Map;
 
 @Slf4j
-public class ClientMessageHander extends SimpleChannelInboundHandler<CraftFramedMessage> {
+public class ClientMessageHander extends SimpleChannelInboundHandler<CraftMessage> {
 
     private Router router;
 
@@ -22,28 +20,26 @@ public class ClientMessageHander extends SimpleChannelInboundHandler<CraftFramed
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
-        TMessage msg = message.getMessageHeader();
-        if (msg.type == Constants.MESSAGE_TYPE_INIT) {
+    protected void channelRead0(ChannelHandlerContext ctx, CraftMessage message) throws Exception {
+        TMessage msg = message.getHeader();
+        if (msg.type == TMessageType.REGISTER) {
             //如果proxy收到的是客户端的连接消息, 则进行服务的初始化处理
             router.addRoute(msg.name);
-            CraftFramedMessage response = new CraftFramedMessage(ctx.channel());
-            response.writeMessageBegin(new TMessage(msg.name, Constants.MESSAGE_TYPE_INIT, msg.seqid));
+            CraftMessage response = new CraftMessage(ctx.channel());
+            response.writeMessageBegin(new TMessage(msg.name, TMessageType.REGISTERED, msg.sequence));
             response.writeMessageEnd();
             ctx.writeAndFlush(response);
             return;
         }
 
-        String serviceName = message.getServiceName();
-        String traceId = message.getTraceId();
-        Map<String, String> header = message.getServiceHeader();
+        TService service = message.getService();
 
-        TMessage messageHeader = message.getMessageHeader();
+        TMessage header = message.getHeader();
 
-        logger.debug("serviceName={}, traceId={}, header={}", serviceName, traceId, header);
+        logger.debug("name={}, traceId={}, cookie={}", service.name, service.traceId, service.cookie);
 
         message.retain();
-        router.route(message).write(ctx.channel(), messageHeader, message);
+        router.route(message).write(ctx.channel(), header, message);
     }
 
     @Override

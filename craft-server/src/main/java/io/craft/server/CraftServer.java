@@ -2,10 +2,10 @@ package io.craft.server;
 
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
-import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.constant.Constants;
 import io.craft.core.registry.ServiceRegistry;
 import io.craft.core.spring.PropertyManager;
+import io.craft.core.thrift.TProcessor;
 import io.craft.core.util.IPUtil;
 import io.craft.server.executor.CraftBusinessExecutor;
 import io.craft.server.executor.CraftRejectedExecutionHandler;
@@ -17,21 +17,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.thrift.TProcessor;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.context.support.FileSystemXmlApplicationContext;
-import sun.misc.Signal;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class CraftServer {
@@ -97,7 +90,6 @@ public class CraftServer {
         port = Integer.valueOf(propertyManager.getProperty(Constants.APPLICATION_PORT));
         TProcessor processor = applicationContext.getBean(TProcessor.class);
         CraftFramedMessageEncoder craftFramedMessageEncoder = new CraftFramedMessageEncoder();
-        CraftThrowableEncoder exceptionEncoder = new CraftThrowableEncoder();
         ServerBootstrap bootstrap = new ServerBootstrap();
         businessExecutor = new CraftBusinessExecutor(100, 20000, new CraftRejectedExecutionHandler());
         bossGroup = new NioEventLoopGroup(10, new CraftThreadFactory("craft-boss-"));
@@ -115,7 +107,6 @@ public class CraftServer {
                         ch.pipeline()
                                 .addLast(new CraftFramedMessageDecoder())
                                 .addLast(craftFramedMessageEncoder)
-                                .addLast(exceptionEncoder)
                                 .addLast(craftMessageHandler)
                         ;
                     }

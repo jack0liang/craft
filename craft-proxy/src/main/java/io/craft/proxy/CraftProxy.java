@@ -3,7 +3,6 @@ package io.craft.proxy;
 
 import io.craft.core.codec.CraftFramedMessageDecoder;
 import io.craft.core.codec.CraftFramedMessageEncoder;
-import io.craft.core.codec.CraftThrowableEncoder;
 import io.craft.core.config.EtcdClient;
 import io.craft.core.constant.Constants;
 import io.craft.proxy.discovery.EtcdServiceDiscovery;
@@ -37,8 +36,6 @@ public class CraftProxy implements Closeable {
 
         int port = Integer.valueOf(PropertyUtil.getProperty(Constants.APPLICATION_PORT));
 
-        CraftThrowableEncoder exceptionEncoder = new CraftThrowableEncoder();
-
         ServerBootstrap bootstrap = new ServerBootstrap();
 
         bossGroup = new NioEventLoopGroup();
@@ -53,7 +50,7 @@ public class CraftProxy implements Closeable {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             logger.info("channel id = {}", ch.id());
-                            ch.pipeline().addLast(exceptionEncoder)
+                            ch.pipeline()
                                     .addLast(new CraftFramedMessageDecoder())
                                     .addLast(new CraftFramedMessageEncoder())
                                     .addLast(new ProxyMessageHandler(discovery));

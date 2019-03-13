@@ -1,7 +1,6 @@
 package io.craft.lang;
 
 import io.craft.core.annotation.*;
-import org.apache.thrift.TException;
 
 import java.util.Date;
 import java.util.List;

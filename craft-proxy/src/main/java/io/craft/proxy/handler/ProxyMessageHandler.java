@@ -1,7 +1,7 @@
 package io.craft.proxy.handler;
 
-import io.craft.core.constant.Constants;
-import io.craft.core.message.CraftFramedMessage;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TService;
 import io.craft.proxy.discovery.EtcdServiceDiscovery;
 import io.craft.proxy.proxy.ProxyClient;
 import io.netty.bootstrap.Bootstrap;
@@ -12,14 +12,13 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.thrift.protocol.TMessage;
 import org.springframework.util.Assert;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramedMessage> {
+public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftMessage> {
     private EtcdServiceDiscovery discovery;
     //private Map<String,PoolChannelHolder> addr2Channel = new HashMap<>();
     private static Map<String, ProxyClient> addr2serverProxy = new HashMap<>();
@@ -44,24 +43,23 @@ public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramed
 //    }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, CraftFramedMessage message) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, CraftMessage message) throws Exception {
 
-        String serviceName = message.getServiceName();
-        String traceId = message.getTraceId();
+        TService service = message.getService();
         //Map<String, String> header;
 
-        Assert.isTrue(!StringUtils.isEmpty(serviceName), "serviceName must not empty");
-        Assert.isTrue(!StringUtils.isEmpty(traceId), "traceId must not empty");
+        Assert.isTrue(!StringUtils.isEmpty(service.name), "name must not empty");
+        Assert.isTrue(!StringUtils.isEmpty(service.traceId), "traceId must not empty");
 
-        logger.debug("serviceName={}, traceId={}", serviceName, traceId);
+        logger.debug("name={}, traceId={}", service.name, service.traceId);
 
         message.retain();
-        String serviceAddr = discovery.findService(serviceName);
+        String serviceAddr = discovery.findService(service.name);
         ProxyClient serverProxy = getServerProxy(ctx.channel().eventLoop(), serviceAddr);
-        serverProxy.write(ctx.channel(),message.getMessageHeader(),message);
+        serverProxy.write(ctx.channel(),message.getHeader(),message);
 //        PoolChannelHolder holder = addr2Channel.get(serviceAddr);
 //        if(holder==null) {
-//            SimpleChannelPool pool = ChannelPoolManager.getChannel(serviceName, serviceAddr);
+//            SimpleChannelPool pool = ChannelPoolManager.getChannel(name, serviceAddr);
 //            Future<Channel> futureChannel = pool.acquire();
 //            holder = new PoolChannelHolder(pool,futureChannel);
 //            addr2Channel.put(serviceAddr,holder);
@@ -96,7 +94,7 @@ public class ProxyMessageHandler extends SimpleChannelInboundHandler<CraftFramed
         return serverProxy;
     }
 
-//    private void proxySend(Channel server, Channel client, CraftFramedMessage message){
+//    private void proxySend(Channel server, Channel client, CraftMessage message){
 //        Attribute<Channel> attrClient = server.attr(io.craft.proxy.constant.Constants.SERVER_ATTRIBUTE_CLIENT);
 //        attrClient.set(client);
 //        server.writeAndFlush(message);

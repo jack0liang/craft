@@ -2,7 +2,8 @@ package io.craft.proxy.router;
 
 import io.craft.core.lbschedule.LBSchedule;
 import io.craft.core.lbschedule.WeightedRoundRobinSchedule;
-import io.craft.core.message.CraftFramedMessage;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TService;
 import io.craft.proxy.proxy.ProxyClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
@@ -10,7 +11,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,12 +48,12 @@ public abstract class AbstractRouter implements Router {
     }
 
     @Override
-    public ProxyClient route(CraftFramedMessage request) throws Exception {
-        String serviceName = request.getServiceName();
-        if (!routerMap.containsKey(serviceName)) {
+    public ProxyClient route(CraftMessage request) throws Exception {
+        TService service = request.getService();
+        if (!routerMap.containsKey(service.name)) {
             throw new Exception("proxy not init");
         }
-        ServiceNode node = routerMap.get(serviceName).get();
+        ServiceNode node = routerMap.get(service.name).get();
         ProxyClient proxy;
         if (proxies.containsKey(node)) {
             //如果proxy已经正常建立了的话,省去了初始化的过程

@@ -1,13 +1,13 @@
 package io.craft.server.executor;
 
-import io.craft.core.exception.CraftMessageException;
-import io.craft.core.message.CraftFramedMessage;
+import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TException;
+import io.craft.core.thrift.TMessage;
+import io.craft.core.thrift.TMessageType;
+import io.craft.core.thrift.TProcessor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.thrift.TException;
-import org.apache.thrift.TProcessor;
-import org.apache.thrift.protocol.TMessage;
 
 @Slf4j
 public class CraftBusinessTask implements Runnable {
@@ -16,9 +16,9 @@ public class CraftBusinessTask implements Runnable {
 
     private TProcessor processor;
 
-    private CraftFramedMessage request;
+    private CraftMessage request;
 
-    public CraftBusinessTask(ChannelHandlerContext context, TProcessor processor, CraftFramedMessage request) {
+    public CraftBusinessTask(ChannelHandlerContext context, TProcessor processor, CraftMessage request) {
         this.context = context;
         this.processor = processor;
         this.request = request;
@@ -43,11 +43,10 @@ public class CraftBusinessTask implements Runnable {
 //        }
 
 
-        CraftFramedMessage response = new CraftFramedMessage(context.channel());
+        CraftMessage response = new CraftMessage(context.channel());
 
         try {
             //logger.debug("request={}, refCnt={} process", request, request.refCnt());
-
             processor.process(request, response);
 
             Future future = context.writeAndFlush(response);
@@ -66,13 +65,24 @@ public class CraftBusinessTask implements Runnable {
         } catch (Exception e) {
             response.release();
             TMessage header;
+            TException ce;
+            if (e instanceof TException) {
+                ce = (TException) e;
+            } else {
+                ce = new TException(e.getMessage(), e.getCause());
+            }
+            CraftMessage error = new CraftMessage(context.channel());
             try {
-                logger.error("process error={}", e.getMessage(), e);
-                header = request.getMessageHeader();
-                context.writeAndFlush(new CraftMessageException(header.seqid));
-            } catch (TException te) {
+                header = request.getHeader();
+                error.writeMessageBegin(new TMessage("exception", TMessageType.EXCEPTION, header.sequence));
+                ce.write(error);
+                error.writeMessageEnd();
+                logger.error("business task execute error={}", e.getMessage(), e);
+                context.writeAndFlush(error);
+            } catch (Exception te) {
                 //获取不到messageId, 则强制将连接关闭
-                logger.error("get messageId error, error={}", te.getMessage(), te);
+                logger.error("write error, error={}", te.getMessage(), te);
+                error.release();
                 context.close();
             }
         } finally {

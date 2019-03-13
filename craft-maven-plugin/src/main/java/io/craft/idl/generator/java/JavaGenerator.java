@@ -36,7 +36,7 @@ public class JavaGenerator extends Generator {
 
     @Override
     protected void processStruct(MetaClass metaClass) throws Exception {
-        Template template = configuration.getTemplate("class.ftl");
+        Template template = configuration.getTemplate("struct.ftl");
         process(template, metaClass);
     }
 
