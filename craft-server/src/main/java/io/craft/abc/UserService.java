@@ -4,9 +4,9 @@ public interface UserService {
 
     io.craft.abc.model.UserModel get(java.lang.Long id) throws io.craft.core.thrift.TException;
 
-    void ping() throws io.craft.core.thrift.TException;
-
     io.craft.abc.model.UserModel gets(java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids) throws io.craft.core.thrift.TException;
+
+    void ping() throws io.craft.core.thrift.TException;
 
 
     class get_args extends io.craft.core.thrift.TArgs {
@@ -198,117 +198,6 @@ public interface UserService {
                 }
                 protocol.writeFieldEnd();
             }
-            protocol.writeFieldStop();
-            protocol.writeStructEnd();
-        }
-    
-    }
-    class ping_args extends io.craft.core.thrift.TArgs {
-    
-        private static final io.craft.core.thrift.TStruct STRUCT_DESC = new io.craft.core.thrift.TStruct("ping_args");
-    
-    
-    
-        public ping_args() {
-        }
-    
-    
-    
-        @Override
-        public boolean equals(java.lang.Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ping_args obj = (ping_args) o;
-            return true;
-        }
-    
-        @Override
-        public int hashCode() {
-            int result = 0;
-            return result;
-        }
-    
-        @Override
-        public java.lang.String toString() {
-            java.lang.StringBuilder sb = new java.lang.StringBuilder("ping_args(");
-            sb.append(")");
-            return sb.toString();
-        }
-    
-        @Override
-        protected void readInternal(io.craft.core.thrift.TProtocol protocol, io.craft.core.thrift.TField field) throws io.craft.core.thrift.TException {
-        }
-    
-        @Override
-        protected void validateInternal() throws io.craft.core.thrift.TException {
-            // check for required fields, which can't be checked in the validate method
-        }
-    
-        @Override
-        protected void writeInternal(io.craft.core.thrift.TProtocol protocol) throws io.craft.core.thrift.TException {
-        }
-    
-    }
-    
-    class ping_result implements io.craft.core.thrift.TSerializable {
-    
-        private static final io.craft.core.thrift.TStruct STRUCT_DESC = new io.craft.core.thrift.TStruct("ping_result");
-    
-    
-    
-        public ping_result() {
-        }
-    
-    
-    
-        @Override
-        public boolean equals(java.lang.Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ping_result obj = (ping_result) o;
-            return true;
-        }
-    
-        @Override
-        public int hashCode() {
-            int result = 0;
-            return result;
-        }
-    
-        @Override
-        public java.lang.String toString() {
-            java.lang.StringBuilder sb = new java.lang.StringBuilder("ping_result(");
-            sb.append(")");
-            return sb.toString();
-        }
-    
-        @Override
-        public void read(io.craft.core.thrift.TProtocol protocol) throws io.craft.core.thrift.TException {
-            io.craft.core.thrift.TField field;
-            protocol.readStructBegin();
-            while (true) {
-                field = protocol.readFieldBegin();
-                if (field.type == io.craft.core.thrift.TType.STOP) {
-                    break;
-                }
-                switch (field.sequence) {
-                    default:
-                        io.craft.core.thrift.TProtocolUtil.skip(protocol, field.type);
-                }
-                protocol.readFieldEnd();
-            }
-            protocol.readStructEnd();
-            validate();
-        }
-    
-        protected void validate() throws io.craft.core.thrift.TException {
-            // check for required fields, which can't be checked in the validate method
-        }
-    
-        @Override
-        public void write(io.craft.core.thrift.TProtocol protocol) throws io.craft.core.thrift.TException {
-            validate();
-            protocol.writeStructBegin(STRUCT_DESC);
             protocol.writeFieldStop();
             protocol.writeStructEnd();
         }
@@ -559,6 +448,117 @@ public interface UserService {
         }
     
     }
+    class ping_args extends io.craft.core.thrift.TArgs {
+    
+        private static final io.craft.core.thrift.TStruct STRUCT_DESC = new io.craft.core.thrift.TStruct("ping_args");
+    
+    
+    
+        public ping_args() {
+        }
+    
+    
+    
+        @Override
+        public boolean equals(java.lang.Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ping_args obj = (ping_args) o;
+            return true;
+        }
+    
+        @Override
+        public int hashCode() {
+            int result = 0;
+            return result;
+        }
+    
+        @Override
+        public java.lang.String toString() {
+            java.lang.StringBuilder sb = new java.lang.StringBuilder("ping_args(");
+            sb.append(")");
+            return sb.toString();
+        }
+    
+        @Override
+        protected void readInternal(io.craft.core.thrift.TProtocol protocol, io.craft.core.thrift.TField field) throws io.craft.core.thrift.TException {
+        }
+    
+        @Override
+        protected void validateInternal() throws io.craft.core.thrift.TException {
+            // check for required fields, which can't be checked in the validate method
+        }
+    
+        @Override
+        protected void writeInternal(io.craft.core.thrift.TProtocol protocol) throws io.craft.core.thrift.TException {
+        }
+    
+    }
+    
+    class ping_result implements io.craft.core.thrift.TSerializable {
+    
+        private static final io.craft.core.thrift.TStruct STRUCT_DESC = new io.craft.core.thrift.TStruct("ping_result");
+    
+    
+    
+        public ping_result() {
+        }
+    
+    
+    
+        @Override
+        public boolean equals(java.lang.Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ping_result obj = (ping_result) o;
+            return true;
+        }
+    
+        @Override
+        public int hashCode() {
+            int result = 0;
+            return result;
+        }
+    
+        @Override
+        public java.lang.String toString() {
+            java.lang.StringBuilder sb = new java.lang.StringBuilder("ping_result(");
+            sb.append(")");
+            return sb.toString();
+        }
+    
+        @Override
+        public void read(io.craft.core.thrift.TProtocol protocol) throws io.craft.core.thrift.TException {
+            io.craft.core.thrift.TField field;
+            protocol.readStructBegin();
+            while (true) {
+                field = protocol.readFieldBegin();
+                if (field.type == io.craft.core.thrift.TType.STOP) {
+                    break;
+                }
+                switch (field.sequence) {
+                    default:
+                        io.craft.core.thrift.TProtocolUtil.skip(protocol, field.type);
+                }
+                protocol.readFieldEnd();
+            }
+            protocol.readStructEnd();
+            validate();
+        }
+    
+        protected void validate() throws io.craft.core.thrift.TException {
+            // check for required fields, which can't be checked in the validate method
+        }
+    
+        @Override
+        public void write(io.craft.core.thrift.TProtocol protocol) throws io.craft.core.thrift.TException {
+            validate();
+            protocol.writeStructBegin(STRUCT_DESC);
+            protocol.writeFieldStop();
+            protocol.writeStructEnd();
+        }
+    
+    }
 
     class Processor<I extends UserService> extends io.craft.core.thrift.TProcessor<I> {
 
@@ -570,8 +570,8 @@ public interface UserService {
 
         private static <I extends UserService> java.util.Map<java.lang.String, io.craft.core.thrift.TFunction<I, ? extends io.craft.core.thrift.TArgs, ? extends io.craft.core.thrift.TSerializable>> getProcessMap(I iface, java.util.Map<java.lang.String, io.craft.core.thrift.TFunction<I, ? extends io.craft.core.thrift.TArgs, ? extends io.craft.core.thrift.TSerializable>> processMap) {
             processMap.put("get", new get(iface));
-            processMap.put("ping", new ping(iface));
             processMap.put("gets", new gets(iface));
+            processMap.put("ping", new ping(iface));
             return processMap;
         }
 
@@ -592,23 +592,6 @@ public interface UserService {
             }
         }
 
-        public static class ping<I extends UserService> extends io.craft.core.thrift.TFunction<I, ping_args, ping_result> {
-
-            public ping(I iface) {
-                super(iface, "ping");
-            }
-
-            public ping_args getEmptyArgsInstance() {
-                return new ping_args();
-            }
-
-            public ping_result getResult(ping_args args) throws io.craft.core.thrift.TException {
-                ping_result result = new ping_result();
-                iface.ping();
-                return result;
-            }
-        }
-
         public static class gets<I extends UserService> extends io.craft.core.thrift.TFunction<I, gets_args, gets_result> {
 
             public gets(I iface) {
@@ -622,6 +605,23 @@ public interface UserService {
             public gets_result getResult(gets_args args) throws io.craft.core.thrift.TException {
                 gets_result result = new gets_result();
                 result.success = iface.gets(args.ids);
+                return result;
+            }
+        }
+
+        public static class ping<I extends UserService> extends io.craft.core.thrift.TFunction<I, ping_args, ping_result> {
+
+            public ping(I iface) {
+                super(iface, "ping");
+            }
+
+            public ping_args getEmptyArgsInstance() {
+                return new ping_args();
+            }
+
+            public ping_result getResult(ping_args args) throws io.craft.core.thrift.TException {
+                ping_result result = new ping_result();
+                iface.ping();
                 return result;
             }
         }
@@ -664,29 +664,6 @@ public interface UserService {
             return null;
         }
 
-        public void ping() throws io.craft.core.thrift.TException {
-            io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> future = send_ping();
-            recv_ping(future);
-        }
-
-        private io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> send_ping() throws io.craft.core.thrift.TException  {
-            ping_args args = new ping_args();
-            args.setServiceName(SERVICE_NAME);
-            String traceId = io.craft.core.util.TraceUtil.getTraceId();
-            if (traceId != null) {
-                args.setTraceId(traceId);
-            } else {
-                args.setTraceId(io.craft.core.util.TraceUtil.generateTraceId());
-            }
-            args.setCookie(io.craft.core.util.TraceUtil.getCookie());
-            return sendBase("ping", args);
-        }
-
-        private void recv_ping(io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> future) throws io.craft.core.thrift.TException  {
-            ping_result result = new ping_result();
-            receiveBase(future, result, "ping");
-        }
-
         public io.craft.abc.model.UserModel gets(java.util.List<java.util.List<java.util.List<java.lang.Long>>> ids) throws io.craft.core.thrift.TException {
             io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> future = send_gets(ids);
             return recv_gets(future);
@@ -713,6 +690,29 @@ public interface UserService {
                 return result.success;
             }
             return null;
+        }
+
+        public void ping() throws io.craft.core.thrift.TException {
+            io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> future = send_ping();
+            recv_ping(future);
+        }
+
+        private io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> send_ping() throws io.craft.core.thrift.TException  {
+            ping_args args = new ping_args();
+            args.setServiceName(SERVICE_NAME);
+            String traceId = io.craft.core.util.TraceUtil.getTraceId();
+            if (traceId != null) {
+                args.setTraceId(traceId);
+            } else {
+                args.setTraceId(io.craft.core.util.TraceUtil.generateTraceId());
+            }
+            args.setCookie(io.craft.core.util.TraceUtil.getCookie());
+            return sendBase("ping", args);
+        }
+
+        private void recv_ping(io.netty.util.concurrent.Future<io.craft.core.message.CraftMessage> future) throws io.craft.core.thrift.TException  {
+            ping_result result = new ping_result();
+            receiveBase(future, result, "ping");
         }
 
     }

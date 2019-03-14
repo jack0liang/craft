@@ -1,5 +1,6 @@
 package io.craft.idl.constant;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,7 @@ public enum ClassType {
     LIST("LIST"),
     ENUM("INT"),
     DATE("LONG"),
-
+    BIGDECIMAL("STRING")
     ;
 
     private String name;
@@ -54,8 +55,10 @@ public enum ClassType {
             return I64;
         } else if (String.class.equals(clazz)) {
             return STRING;
-        }  else if (Date.class.equals(clazz)) {
+        } else if (Date.class.equals(clazz)) {
             return DATE;
+        } else if (BigDecimal.class.equals(clazz)) {
+            return BIGDECIMAL;
         } else if (clazz.isAssignableFrom(Set.class)) {
             return SET;
         } else if (clazz.isAssignableFrom(List.class)) {

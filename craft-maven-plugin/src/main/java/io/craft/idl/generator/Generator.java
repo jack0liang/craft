@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static io.craft.core.constant.Constants.SEQUENCE_START_OFFSET;
@@ -125,7 +126,8 @@ public abstract class Generator {
                         cls.equals(Integer.class) ||
                         cls.equals(Long.class) ||
                         cls.equals(String.class) ||
-                        cls.equals(Date.class)
+                        cls.equals(Date.class) ||
+                        cls.equals(BigDecimal.class)
                 ) {
             //基本类型不用生成，直接返回即可
             metaClass.setClassName(cls.getSimpleName());

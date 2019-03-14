@@ -2,6 +2,7 @@ package io.craft.lang;
 
 import io.craft.core.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,9 @@ public interface UserService {
 
         @Sequence(6)
         UserType userType;
+
+        @Sequence(7)
+        BigDecimal dec;
 
     }
 

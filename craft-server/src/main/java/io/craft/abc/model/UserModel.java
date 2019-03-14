@@ -11,6 +11,7 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
     private static final io.craft.core.thrift.TField MAPS_FIELD_DESC = new io.craft.core.thrift.TField("maps", io.craft.core.thrift.TType.MAP, (short)4);
     private static final io.craft.core.thrift.TField JOINDATE_FIELD_DESC = new io.craft.core.thrift.TField("joinDate", io.craft.core.thrift.TType.LONG, (short)5);
     private static final io.craft.core.thrift.TField USERTYPE_FIELD_DESC = new io.craft.core.thrift.TField("userType", io.craft.core.thrift.TType.INT, (short)6);
+    private static final io.craft.core.thrift.TField DEC_FIELD_DESC = new io.craft.core.thrift.TField("dec", io.craft.core.thrift.TType.STRING, (short)7);
 
     private java.lang.Long id;
     private java.lang.String name;
@@ -19,6 +20,7 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
     private java.util.Map<java.lang.String, java.lang.String> maps;
     private java.util.Date joinDate;
     private io.craft.abc.constant.UserType userType;
+    private java.math.BigDecimal dec;
 
     public UserModel() {
     }
@@ -30,7 +32,8 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
             java.util.Set<java.lang.Integer> sets, 
             java.util.Map<java.lang.String, java.lang.String> maps, 
             java.util.Date joinDate, 
-            io.craft.abc.constant.UserType userType
+            io.craft.abc.constant.UserType userType, 
+            java.math.BigDecimal dec
         )
         {
         this();
@@ -41,6 +44,7 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         this.maps = maps;
         this.joinDate = joinDate;
         this.userType = userType;
+        this.dec = dec;
     }
 
     public java.lang.Long getId() {
@@ -106,13 +110,22 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         return this;
     }
 
+    public java.math.BigDecimal getDec() {
+        return this.dec;
+    }
+
+    public UserModel setDec(java.math.BigDecimal dec) {
+        this.dec = dec;
+        return this;
+    }
+
 
     @Override
     public boolean equals(java.lang.Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserModel obj = (UserModel) o;
-        return true && java.util.Objects.equals(id, obj.id) && java.util.Objects.equals(name, obj.name) && java.util.Objects.equals(lists, obj.lists) && java.util.Objects.equals(sets, obj.sets) && java.util.Objects.equals(maps, obj.maps) && java.util.Objects.equals(joinDate, obj.joinDate) && java.util.Objects.equals(userType, obj.userType);
+        return true && java.util.Objects.equals(id, obj.id) && java.util.Objects.equals(name, obj.name) && java.util.Objects.equals(lists, obj.lists) && java.util.Objects.equals(sets, obj.sets) && java.util.Objects.equals(maps, obj.maps) && java.util.Objects.equals(joinDate, obj.joinDate) && java.util.Objects.equals(userType, obj.userType) && java.util.Objects.equals(dec, obj.dec);
     }
 
     @Override
@@ -125,6 +138,7 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         result = 31 * result + (maps != null ? maps.hashCode() : 0);
         result = 31 * result + (joinDate != null ? joinDate.hashCode() : 0);
         result = 31 * result + (userType != null ? userType.hashCode() : 0);
+        result = 31 * result + (dec != null ? dec.hashCode() : 0);
         return result;
     }
 
@@ -151,6 +165,9 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
         sb.append(",");
         sb.append("userType:");
         sb.append(this.userType);
+        sb.append(",");
+        sb.append("dec:");
+        sb.append(this.dec);
         sb.append(")");
         return sb.toString();
     }
@@ -253,6 +270,15 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
                     if (field.type == io.craft.core.thrift.TType.INT) {
                         {
                             this.userType = io.craft.abc.constant.UserType.findByValue(protocol.readInt());
+                        }
+                    } else {
+                        io.craft.core.thrift.TProtocolUtil.skip(protocol, field.type);
+                    }
+                    break;
+                case 7: // dec STRING
+                    if (field.type == io.craft.core.thrift.TType.STRING) {
+                        {
+                            this.dec = new java.math.BigDecimal(protocol.readString());
                         }
                     } else {
                         io.craft.core.thrift.TProtocolUtil.skip(protocol, field.type);
@@ -363,6 +389,15 @@ public class UserModel implements io.craft.core.thrift.TSerializable {
             if (this.userType != null) {
                 {
                     protocol.writeInt(this.userType.getValue());
+                }
+            }
+            protocol.writeFieldEnd();
+        }
+        if (this.dec != null) {
+            protocol.writeFieldBegin(DEC_FIELD_DESC);
+            if (this.dec != null) {
+                {
+                    protocol.writeString(this.dec.toString());
                 }
             }
             protocol.writeFieldEnd();
