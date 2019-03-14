@@ -49,7 +49,7 @@ under the License.
                         <include>**/*.*</include>
                     </includes>
                 </fileSet>
-                <fileSet encoding="UTF-8" filtered="true" packaged="true">
+                <fileSet encoding="UTF-8" filtered="true">
                     <directory>src/main/resources</directory>
                     <includes>
                         <include>**/*.*</include>
@@ -65,7 +65,7 @@ under the License.
                         <include>**/*.*</include>
                     </includes>
                 </fileSet>
-                <fileSet encoding="UTF-8" filtered="true" packaged="true">
+                <fileSet encoding="UTF-8" filtered="true">
                     <directory>src/main/resources</directory>
                     <includes>
                         <include>**/*.*</include>

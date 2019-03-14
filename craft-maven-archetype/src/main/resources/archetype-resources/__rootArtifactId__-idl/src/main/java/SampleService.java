@@ -11,7 +11,7 @@ import java.util.Set;
 @Label("用户服务")
 public interface SampleService {
 
-    @Struct("io.craft.abc.model")
+    @Struct("${package}.model")
     @Label("用户数据模型")
     class UserModel {
 
@@ -40,7 +40,7 @@ public interface SampleService {
 
     }
 
-    @Struct("io.craft.abc.constant")
+    @Struct("${package}.constant")
     @Label("用户类型")
     enum UserType {
 

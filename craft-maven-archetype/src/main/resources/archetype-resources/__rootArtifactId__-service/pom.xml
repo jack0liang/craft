@@ -18,6 +18,11 @@
       <groupId>io.craft</groupId>
       <artifactId>craft-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${groupId}</groupId>
+      <artifactId>${rootArtifactId}-api</artifactId>
+      <version>${version}</version>
+    </dependency>
   </dependencies>
 
 </project>
