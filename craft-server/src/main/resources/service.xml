@@ -13,7 +13,7 @@
     <craft:property-placeholder
             file-encoding="utf-8"
             ignore-resource-not-found="true"
-            location="application.properties,etcd://127.0.0.1:2379" />
+            location="application.properties,etcd://192.168.11.217:2379" />
 
     <craft:service class="io.craft.UserServiceImpl" />
 
