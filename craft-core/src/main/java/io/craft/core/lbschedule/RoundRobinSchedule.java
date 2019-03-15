@@ -21,6 +21,9 @@ public class RoundRobinSchedule<E> implements LBSchedule<E, Object> {
     @Override
     public E get() {
         E[] vnodes = nodes;
+        if (vnodes.length == 0) {
+            return null;
+        }
         int pos = current.getAndUpdate(prev -> {
             int next = prev++;
             if (next >= vnodes.length) {

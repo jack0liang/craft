@@ -25,6 +25,9 @@ public class HashSchedule<E> implements LBSchedule<E, Hashing> {
     @Override
     public E get(Hashing request) {
         E[] vnodes = nodes;
+        if (vnodes.length == 0) {
+            return null;
+        }
         int pos = request.hash() % vnodes.length;
         return vnodes[pos];
     }

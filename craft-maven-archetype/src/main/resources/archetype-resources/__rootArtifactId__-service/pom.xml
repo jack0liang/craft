@@ -11,12 +11,16 @@
   </parent>
 
   <artifactId>${artifactId}</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>io.craft</groupId>
       <artifactId>craft-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.craft</groupId>
+      <artifactId>craft-server</artifactId>
     </dependency>
     <dependency>
       <groupId>${groupId}</groupId>

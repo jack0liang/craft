@@ -28,4 +28,6 @@ public class Constants {
 
     public final static int INT_BYTE_LENGTH = 4;
 
+    public final static String ROOT_LOG_LEVEL_CONFIG_KEY = "log.level.root";
+
 }

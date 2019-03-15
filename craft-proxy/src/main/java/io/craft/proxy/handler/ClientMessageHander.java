@@ -1,6 +1,7 @@
 package io.craft.proxy.handler;
 
 import io.craft.core.message.CraftMessage;
+import io.craft.core.thrift.TException;
 import io.craft.core.thrift.TMessage;
 import io.craft.core.thrift.TMessageType;
 import io.craft.core.thrift.TService;
@@ -39,7 +40,16 @@ public class ClientMessageHander extends SimpleChannelInboundHandler<CraftMessag
         logger.debug("name={}, traceId={}, cookie={}", service.name, service.traceId, service.cookie);
 
         message.retain();
-        router.route(message).write(ctx.channel(), header, message);
+        try {
+            router.route(message).write(ctx.channel(), header, message);
+        } catch (Exception e) {
+            CraftMessage response = new CraftMessage(ctx.channel());
+            response.writeMessageBegin(new TMessage(msg.name, TMessageType.EXCEPTION, msg.sequence));
+            TException ex = new TException(e.getMessage(), e);
+            ex.write(response);
+            response.writeMessageEnd();
+            ctx.writeAndFlush(response);
+        }
     }
 
     @Override

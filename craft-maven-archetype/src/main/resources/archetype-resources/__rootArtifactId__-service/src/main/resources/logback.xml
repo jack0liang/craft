@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true" scan="true" scanPeriod="30 second">
 
-    <property name="PROJECT" value="craft-server"/>
+    <property name="PROJECT" value="${package}"/>
     <property name="ROOT" value="logs"/>
     <property name="MAXHISTORY" value="100"/>
 
@@ -24,11 +24,8 @@
         </rollingPolicy>
     </appender>
 
-    <logger name="io.grpc" level="INFO" />
-    <logger name="io.craft.core.config.EtcdClient" level="INFO" />
-
     <!-- Logger 根目录 -->
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>

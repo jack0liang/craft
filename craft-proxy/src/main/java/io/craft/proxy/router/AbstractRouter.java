@@ -54,6 +54,9 @@ public abstract class AbstractRouter implements Router {
             throw new Exception("proxy not init");
         }
         ServiceNode node = routerMap.get(service.name).get();
+        if (node == null) {
+            throw new Exception("can not find any service node");
+        }
         ProxyClient proxy;
         if (proxies.containsKey(node)) {
             //如果proxy已经正常建立了的话,省去了初始化的过程

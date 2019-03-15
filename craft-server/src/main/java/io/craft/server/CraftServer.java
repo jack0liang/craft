@@ -128,7 +128,7 @@ public class CraftServer {
         channel.closeFuture().sync();
     }
 
-    private void serve() throws Throwable {
+    public void serve() throws Throwable {
         //注册钩子,在服务关闭的时候关闭容器
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {

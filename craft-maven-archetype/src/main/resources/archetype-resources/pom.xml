@@ -31,6 +31,11 @@
         <version>${craft.version}</version>
       </dependency>
       <dependency>
+        <groupId>io.craft</groupId>
+        <artifactId>craft-server</artifactId>
+        <version>${craft.version}</version>
+      </dependency>
+      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>

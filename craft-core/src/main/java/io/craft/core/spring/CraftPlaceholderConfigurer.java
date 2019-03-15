@@ -1,5 +1,7 @@
 package io.craft.core.spring;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import io.craft.core.config.ConfigClient;
 import io.craft.core.constant.Constants;
 import org.slf4j.Logger;
@@ -94,6 +96,12 @@ public class CraftPlaceholderConfigurer extends PropertyPlaceholderConfigurer im
 
     @Override
     protected void processProperties(ConfigurableListableBeanFactory beanFactoryToProcess, Properties props) throws BeansException {
+        String logLevel = props.getProperty(Constants.ROOT_LOG_LEVEL_CONFIG_KEY);
+        if (logLevel != null) {
+            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+            loggerContext.getLogger("root").setLevel(Level.toLevel(logLevel));
+            logger.info("change root log level to {}", logLevel);
+        }
         properties.putAll(props);
     }
 
