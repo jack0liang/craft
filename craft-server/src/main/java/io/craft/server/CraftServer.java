@@ -31,8 +31,6 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class CraftServer {
 
-    private static final String SERVICE_AUTOCONFIG_TEST = "service-test.xml";
-
     private static final String SERVICE_AUTOCONFIG = "service.xml";
 
     private volatile ConfigurableApplicationContext applicationContext;
@@ -53,30 +51,11 @@ public class CraftServer {
 
     private PropertyManager propertyManager;
 
-    private URL findURLOfDefaultConfigurationFile() {
-        URL url;
-        url = getResource(SERVICE_AUTOCONFIG_TEST);
-        if (url != null) {
-            return url;
-        }
-
-        return getResource(SERVICE_AUTOCONFIG);
-    }
-
-    private URL getResource(String filename) {
-        ClassLoader loader = this.getClass().getClassLoader();
-        return loader.getResource(filename);
-    }
-
     /**
      * 创建spring context
      */
     private void createApplicationContext() throws Exception {
-        URL configLocation = findURLOfDefaultConfigurationFile();
-        if (configLocation == null) {
-            throw new Exception("xml config not found");
-        }
-        applicationContext = new ClassPathXmlApplicationContext("service.xml");
+        applicationContext = new ClassPathXmlApplicationContext(SERVICE_AUTOCONFIG);
         propertyManager = applicationContext.getBean(PropertyManager.class);
         if (propertyManager == null) {
             throw new Exception("property manager init failed");
