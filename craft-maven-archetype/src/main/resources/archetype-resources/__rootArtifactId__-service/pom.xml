@@ -13,6 +13,10 @@
   <artifactId>${artifactId}</artifactId>
   <packaging>jar</packaging>
 
+  <properties>
+    <archive.manifest.mainClass>io.craft.server.CraftServer</archive.manifest.mainClass>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.craft</groupId>
@@ -32,11 +36,25 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>io.craft</groupId>
+        <artifactId>craft-maven-plugin</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <id>package</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>package</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <version>${spring-boot.version}</version>
         <configuration>
-          <mainClass>io.craft.server.CraftServer</mainClass>
+          <mainClass>${archive.manifest.mainClass}</mainClass>
           <layout>JAR</layout>
         </configuration>
         <executions>

@@ -15,7 +15,7 @@
             ignore-resource-not-found="true"
             location="application.properties,etcd://192.168.11.217:2379" />
 
-    <craft:service class="io.craft.UserServiceImpl" />
+    <craft:service class="${package}.SampleServiceImpl" />
 
     <context:annotation-config />
 

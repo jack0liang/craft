@@ -51,6 +51,10 @@ public class CraftServer {
 
     private PropertyManager propertyManager;
 
+    private CraftServer() {
+
+    }
+
     /**
      * 创建spring context
      */
@@ -187,8 +191,12 @@ public class CraftServer {
         logger.info("close 7/7 spring container close done");
     }
 
-    public static void main(String... args) throws Throwable {
+    public static void run(String... args) throws Throwable {
         CraftServer server = new CraftServer();
         server.serve();
+    }
+
+    public static void main(String... args) throws Throwable {
+        run(args);
     }
 }
